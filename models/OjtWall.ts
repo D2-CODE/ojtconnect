@@ -1,0 +1,102 @@
+import mongoose, { Schema, Document, Model } from 'mongoose';
+import connectDB from '@/lib/mongodb';
+
+export type LeadType = 'intern' | 'internship';
+export type OjtWallStatus = 'unclaimed' | 'claimed' | 'expired' | 'hidden';
+
+export interface IFbLead {
+  name?: string;
+  profile_url?: string;
+  profile_pic?: string;
+  post_text?: string;
+  post_link?: string;
+  emails?: string;
+  phones?: string;
+  skills?: string;
+  experience?: string;
+  lead_type?: LeadType;
+  resume_url?: string;
+  scraped_at?: Date;
+}
+
+export interface ISectionData {
+  fbleads?: IFbLead;
+}
+
+export interface IOjtWall extends Document<string> {
+  _id: string;
+  SectionData?: ISectionData;
+  claimedBy?: string;
+  claimedAt?: Date;
+  claimToken?: string;
+  claimTokenExpiry?: Date;
+  claimEmailSent: boolean;
+  claimEmailSentAt?: Date;
+  status: OjtWallStatus;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const FbLeadSchema = new Schema<IFbLead>(
+  {
+    name: { type: String },
+    profile_url: { type: String },
+    profile_pic: { type: String },
+    post_text: { type: String },
+    post_link: { type: String },
+    emails: { type: String },
+    phones: { type: String },
+    skills: { type: String },
+    experience: { type: String },
+    lead_type: {
+      type: String,
+      enum: ['intern', 'internship'] as LeadType[],
+    },
+    resume_url: { type: String },
+    scraped_at: { type: Date },
+  },
+  { _id: false }
+);
+
+const SectionDataSchema = new Schema<ISectionData>(
+  {
+    fbleads: { type: FbLeadSchema },
+  },
+  { _id: false }
+);
+
+const OjtWallSchema = new Schema<IOjtWall>(
+  {
+    _id: { type: String, required: true },
+    SectionData: { type: SectionDataSchema },
+    claimedBy: { type: String, ref: 'User' },
+    claimedAt: { type: Date },
+    claimToken: { type: String },
+    claimTokenExpiry: { type: Date },
+    claimEmailSent: { type: Boolean, default: false },
+    claimEmailSentAt: { type: Date },
+    status: {
+      type: String,
+      enum: ['unclaimed', 'claimed', 'expired', 'hidden'] as OjtWallStatus[],
+      default: 'unclaimed',
+    },
+    isActive: { type: Boolean, default: true },
+    createdAt: { type: Date },
+  },
+  {
+    // No automatic timestamps — createdAt is set manually from FB scraper $date format
+    // updatedAt is managed automatically via the option below
+    timestamps: { createdAt: false, updatedAt: true },
+    _id: false,
+    minimize: false,
+  }
+);
+
+void connectDB;
+
+const OjtWall: Model<IOjtWall> =
+  (mongoose.models.OjtWall as Model<IOjtWall>) ||
+  mongoose.model<IOjtWall>('OjtWall', OjtWallSchema);
+
+export default OjtWall;
