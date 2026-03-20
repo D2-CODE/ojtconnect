@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import connectDB from '@/lib/mongodb';
 
 export type ProfileType = 'student' | 'company' | 'university_admin' | 'super_admin';
 
@@ -55,8 +54,6 @@ const UserSchema = new Schema<IUser>(
     _id: false,
   }
 );
-
-void connectDB;
 
 const User: Model<IUser> =
   (mongoose.models.User as Model<IUser>) ||

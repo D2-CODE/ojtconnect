@@ -6,7 +6,6 @@
  */
 
 import nodemailer from "nodemailer";
-import connectDB from "@/lib/mongodb";
 import { generateId } from "@/lib/utils";
 import type { EmailType, EmailStatus } from "@/types";
 import EmailLog from "@/models/EmailLog";
@@ -45,7 +44,6 @@ async function logEmail(opts: {
   relatedEntityType?: string;
 }): Promise<void> {
   try {
-    await connectDB();
     await EmailLog.create({
       _id: generateId(),
       to: opts.to,

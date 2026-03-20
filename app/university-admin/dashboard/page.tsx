@@ -28,6 +28,7 @@ export default function UniversityAdminDashboardPage() {
   const { toast: showToast } = useToast();
   const [uniProfile, setUniProfile] = useState<UniversityProfile | null>(null);
   const [pendingStudents, setPendingStudents] = useState<StudentItem[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const load = () => {
@@ -37,8 +38,12 @@ export default function UniversityAdminDashboardPage() {
       if (p.success) {
         setUniProfile(p.data);
         if (p.data?._id) {
-          fetch(`/api/students?universityId=${p.data._id}&verificationStatus=pending&limit=5`).then((r) => r.json()).then((d) => {
-            if (d.success) setPendingStudents(d.data);
+          Promise.all([
+            fetch(`/api/students?universityId=${p.data._id}&verificationStatus=pending&limit=5`).then((r) => r.json()),
+            fetch(`/api/students?universityId=${p.data._id}&verificationStatus=pending&limit=1`).then((r) => r.json()),
+          ]).then(([list, count]) => {
+            if (list.success) setPendingStudents(list.data);
+            if (count.success) setPendingCount(count.meta?.total || 0);
           });
         }
       }
@@ -84,7 +89,7 @@ export default function UniversityAdminDashboardPage() {
       <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <div className="flex items-center gap-2 mb-1"><Clock className="w-4 h-4 text-amber-500" /><span className="text-xs text-gray-500">Pending Verifications</span></div>
-          <div className="font-semibold text-amber-500">{pendingStudents.length}</div>
+          <div className="font-semibold text-amber-500">{pendingCount}</div>
         </div>
         <Link href="/university-admin/students" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-[#0F6E56] transition-colors">
           <div className="flex items-center gap-2 mb-1"><Users className="w-4 h-4 text-blue-500" /><span className="text-xs text-gray-500">Manage Students</span></div>

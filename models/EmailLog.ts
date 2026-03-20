@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import connectDB from '@/lib/mongodb';
 
 export type EmailTemplate =
   | 'claim_invite'
@@ -68,8 +67,6 @@ const EmailLogSchema = new Schema<IEmailLog>(
     _id: false,
   }
 );
-
-void connectDB;
 
 const EmailLog: Model<IEmailLog> =
   (mongoose.models.EmailLog as Model<IEmailLog>) ||

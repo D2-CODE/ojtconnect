@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import connectDB from '@/lib/mongodb';
 
 export type ModuleName =
   | 'dashboard'
@@ -73,8 +72,6 @@ const RoleSchema = new Schema<IRole>(
     _id: false,
   }
 );
-
-void connectDB;
 
 const Role: Model<IRole> =
   (mongoose.models.Role as Model<IRole>) ||

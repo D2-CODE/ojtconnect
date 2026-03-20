@@ -36,7 +36,7 @@ export default function AdminPostsPage() {
     else if (tab !== 'all') params.set('type', tab);
     if (search) params.set('search', search);
     fetch(`/api/wall?${params}`).then((r) => r.json()).then((d) => {
-      if (d.success) { setPosts(d.data); setTotal(d.total || 0); }
+      if (d.success) { setPosts(d.data); setTotal(d.meta?.total || 0); }
     }).finally(() => setLoading(false));
   }, [page, tab, search]);
 

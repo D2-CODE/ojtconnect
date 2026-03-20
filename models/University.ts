@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import connectDB from '@/lib/mongodb';
 
 export type VerificationStatus = 'pending' | 'verified' | 'rejected';
 
@@ -58,8 +57,6 @@ const UniversitySchema = new Schema<IUniversity>(
     _id: false,
   }
 );
-
-void connectDB;
 
 const University: Model<IUniversity> =
   (mongoose.models.University as Model<IUniversity>) ||

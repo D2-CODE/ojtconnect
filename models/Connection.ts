@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import connectDB from '@/lib/mongodb';
 
 export type ConnectionPartyType = 'student' | 'company';
 export type ConnectionStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn';
@@ -51,8 +50,6 @@ const ConnectionSchema = new Schema<IConnection>(
     _id: false,
   }
 );
-
-void connectDB;
 
 const Connection: Model<IConnection> =
   (mongoose.models.Connection as Model<IConnection>) ||

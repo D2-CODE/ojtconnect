@@ -38,10 +38,7 @@ if (!global.mongoose) {
 // Connection helper
 // ---------------------------------------------------------------------------
 export async function connectDB(): Promise<typeof mongoose> {
-  if (cached.conn) {
-    console.log("[MongoDB] Using cached connection");
-    return cached.conn;
-  }
+  if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
     const opts: mongoose.ConnectOptions = {
@@ -78,12 +75,10 @@ export async function connectDB(): Promise<typeof mongoose> {
         throw err;
       });
   } else {
-    console.log("[MongoDB] Waiting for existing connection promise...");
+    // waiting for existing promise
   }
 
-  console.log("[MongoDB] Awaiting connection...");
   cached.conn = await cached.promise;
-  console.log("[MongoDB] Connection ready");
   return cached.conn;
 }
 

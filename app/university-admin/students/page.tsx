@@ -47,7 +47,7 @@ export default function UniversityStudentsPage() {
     if (tab !== 'all') params.set('verificationStatus', tab);
     if (search) params.set('search', search);
     fetch(`/api/students?${params}`).then((r) => r.json()).then((d) => {
-      if (d.success) { setStudents(d.data); setTotal(d.total || 0); }
+      if (d.success) { setStudents(d.data); setTotal(d.meta?.total || 0); }
     }).finally(() => setLoading(false));
   }, [uniId, page, tab, search]);
 

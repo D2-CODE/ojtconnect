@@ -14,14 +14,16 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const search = searchParams.get('search');
+    const profileType = searchParams.get('profileType');
     const query: Record<string, unknown> = {};
     if (search) query['$or'] = [{ name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }];
+    if (profileType) query.profileType = profileType;
     const skip = (page - 1) * limit;
     const [users, total] = await Promise.all([
       User.find(query, '-password').sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
       User.countDocuments(query),
     ]);
-    return NextResponse.json({ success: true, data: users, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } });
+    return NextResponse.json({ success: true, data: users, total, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }

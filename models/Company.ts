@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import connectDB from '@/lib/mongodb';
 
 export type CompanySize = '1-10' | '11-50' | '51-200' | '201-500' | '500+';
 export type InternshipSetup = 'onsite' | 'remote' | 'hybrid';
@@ -80,8 +79,6 @@ const CompanySchema = new Schema<ICompany>(
     _id: false,
   }
 );
-
-void connectDB;
 
 const Company: Model<ICompany> =
   (mongoose.models.Company as Model<ICompany>) ||

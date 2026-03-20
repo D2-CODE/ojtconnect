@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import OjtWall from '@/models/OjtWall';
+import EmailLog from '@/models/EmailLog';
 import { generateId, generateClaimToken } from '@/lib/utils';
 import { sendEmail } from '@/lib/email';
 
@@ -126,7 +127,6 @@ export async function POST(req: NextRequest) {
   // 5. Send claim invite to ALL valid emails — each with its own ?email= query param
   // Skip any email that already received a sent email today for this post
   const emails = extractEmails(rawEmails);
-  const EmailLog = (await import('@/models/EmailLog')).default;
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const posterName = String(name ?? 'there');

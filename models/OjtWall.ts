@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import connectDB from '@/lib/mongodb';
 
 export type LeadType = 'intern' | 'internship';
 export type OjtWallStatus = 'unclaimed' | 'claimed' | 'expired' | 'hidden';
@@ -96,8 +95,6 @@ const OjtWallSchema = new Schema<IOjtWall>(
     minimize: false,
   }
 );
-
-void connectDB;
 
 const OjtWall: Model<IOjtWall> =
   (mongoose.models.OjtWall as Model<IOjtWall>) ||

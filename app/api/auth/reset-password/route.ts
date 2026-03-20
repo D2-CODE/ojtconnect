@@ -10,8 +10,6 @@ export async function GET(req: NextRequest) {
     if (!token) return NextResponse.json({ success: false, error: 'Token is required' }, { status: 400 });
 
     await connectDB();
-    const user = await User.findOne({ resetToken: token }).select('_id resetToken resetTokenExpiry').lean();
-    // Use collection directly to bypass schema field stripping
     const rawUser = await User.collection.findOne({ resetToken: token });
     console.log('[ResetPassword] token:', token, '| rawUser:', rawUser ? { id: rawUser._id, expiry: rawUser.resetTokenExpiry } : null);
 

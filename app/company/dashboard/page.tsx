@@ -18,7 +18,7 @@ export default function CompanyDashboardPage() {
     Promise.all([
       fetch('/api/profile').then((r) => r.json()),
       fetch('/api/connections').then((r) => r.json()),
-      fetch('/api/students?setup=true&limit=4').then((r) => r.json()),
+      fetch('/api/students?verificationStatus=verified&limit=4').then((r) => r.json()),
     ]).then(([p, c, s]) => {
       if (p.success) setProfile(p.data);
       if (c.success) setConnections(c.data);

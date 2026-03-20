@@ -35,16 +35,16 @@ export default function AdminUniversitiesPage() {
     if (tab !== 'all') params.set('verificationStatus', tab);
     if (search) params.set('search', search);
     fetch(`/api/universities?${params}`).then((r) => r.json()).then((d) => {
-      if (d.success) { setUnis(d.data); setTotal(d.total || 0); }
+      if (d.success) { setUnis(d.data); setTotal(d.meta?.total || 0); }
     }).finally(() => setLoading(false));
   }, [page, tab, search]);
 
   useEffect(() => { const t = setTimeout(load, 300); return () => clearTimeout(t); }, [load]);
 
-  const verify = async (id: string, status: string) => {
-    const res = await fetch(`/api/universities/${id}/verify`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+  const verify = async (id: string, action: 'verified' | 'rejected') => {
+    const res = await fetch(`/api/universities/${id}/verify`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: action === 'verified' ? 'verify' : 'reject' }) });
     const d = await res.json();
-    if (d.success) { showToast(`University ${status}`, 'success'); load(); }
+    if (d.success) { showToast(`University ${action}`, 'success'); load(); }
     else showToast(d.error || 'Failed', 'error');
   };
 

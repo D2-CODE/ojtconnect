@@ -19,7 +19,7 @@ async function getUniversity(slug: string) {
 async function getStudents(universityId: string) {
   try {
     const base = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const res = await fetch(`${base}/api/students?universityId=${universityId}&setup=true`, { cache: 'no-store' });
+    const res = await fetch(`${base}/api/students?universityId=${universityId}&verificationStatus=verified`, { cache: 'no-store' });
     const d = await res.json();
     return d.success ? d.data : [];
   } catch { return []; }

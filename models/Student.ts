@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import connectDB from '@/lib/mongodb';
 
 export type PreferredSetup = 'onsite' | 'remote' | 'hybrid';
 export type UniversityVerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected';
@@ -76,8 +75,6 @@ const StudentSchema = new Schema<IStudent>(
     _id: false,
   }
 );
-
-void connectDB;
 
 const Student: Model<IStudent> =
   (mongoose.models.Student as Model<IStudent>) ||

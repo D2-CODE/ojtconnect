@@ -24,8 +24,8 @@ export default function UniversityPreviewPage() {
     fetch('/api/profile').then((r) => r.json()).then((d) => {
       if (d.success && d.data) {
         setProfile(d.data);
-        fetch(`/api/students?universityId=${d.data._id}&setup=true`).then((r) => r.json()).then((s) => {
-          if (s.success) setStudentCount(s.total || s.data?.length || 0);
+        fetch(`/api/students?universityId=${d.data._id}&verificationStatus=verified`).then((r) => r.json()).then((s) => {
+          if (s.success) setStudentCount(s.meta?.total || s.data?.length || 0);
         });
       }
     }).finally(() => setLoading(false));

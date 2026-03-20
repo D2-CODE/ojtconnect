@@ -22,10 +22,10 @@ export default function CompanySearchPage() {
 
   const load = useCallback(() => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: String(limit), setup: 'true' });
+    const params = new URLSearchParams({ page: String(page), limit: String(limit), verificationStatus: 'verified' });
     if (search) params.set('search', search);
     fetch(`/api/students?${params}`).then((r) => r.json()).then((d) => {
-      if (d.success) { setStudents(d.data); setTotal(d.total || 0); }
+      if (d.success) { setStudents(d.data); setTotal(d.meta?.total || 0); }
     }).finally(() => setLoading(false));
   }, [page, search]);
 

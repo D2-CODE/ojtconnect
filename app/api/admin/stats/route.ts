@@ -27,7 +27,7 @@ export async function GET() {
       Connection.countDocuments(),
       EmailLog.countDocuments({ status: 'sent' }),
     ]);
-    return NextResponse.json({ success: true, data: { totalUsers, totalUniversities, pendingUniversities, totalStudents, pendingStudents, totalCompanies, totalPosts, totalConnections, emailsSent } });
+    return NextResponse.json({ success: true, data: { users: totalUsers, universities: totalUniversities, pendingUniversities, students: totalStudents, pendingStudents, companies: totalCompanies, wallPosts: totalPosts, connections: totalConnections, emailLogs: emailsSent } });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }

@@ -5,22 +5,22 @@ import { auth } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
   try {
-    await connectDB();
     const session = await auth();
+    await connectDB();
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
     const search = searchParams.get('search');
-    const setup = searchParams.get('setup');
     const universityId = searchParams.get('universityId');
     const verificationStatus = searchParams.get('verificationStatus');
+    const preferredSetup = searchParams.get('preferredSetup');
 
     const isAdmin = session?.user?.roleName === 'super_admin';
     const isUniAdmin = session?.user?.roleName === 'university_admin';
 
     const query: Record<string, unknown> = {};
     if (!isAdmin) query.isVisible = true;
-    if (setup) query.preferredSetup = setup;
+    if (preferredSetup) query.preferredSetup = preferredSetup;
     if (universityId) query.universityId = universityId;
     if (verificationStatus) query.universityVerificationStatus = verificationStatus;
     else if (!isAdmin && !isUniAdmin) query.universityVerificationStatus = 'verified';
