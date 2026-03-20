@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { GraduationCap, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -9,32 +9,41 @@ interface ClaimData {
   postId: string;
   postName: string;
   email: string;
+  postText: string;
 }
 
 export default function ClaimPage() {
   const { token } = useParams<{ token: string }>();
+  const searchParams = useSearchParams();
+  const email = searchParams.get('email') ?? '';
   const router = useRouter();
   const [state, setState] = useState<'loading' | 'valid' | 'invalid' | 'success' | 'error'>('loading');
   const [claimData, setClaimData] = useState<ClaimData | null>(null);
   const [claiming, setClaiming] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/claim/${token}`)
+    const query = email ? `?email=${encodeURIComponent(email)}` : '';
+    fetch(`/api/claim/${token}${query}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.success) { setClaimData(d.data); setState('valid'); }
         else setState('invalid');
       })
       .catch(() => setState('invalid'));
-  }, [token]);
+  }, [token, email]);
 
   const handleClaim = async () => {
     setClaiming(true);
     try {
-      const res = await fetch(`/api/claim/${token}`, { method: 'POST' });
+      const query = email ? `?email=${encodeURIComponent(email)}` : '';
+      const res = await fetch(`/api/claim/${token}${query}`, { method: 'POST' });
       const d = await res.json();
-      if (d.success) setState('success');
-      else setState('error');
+      if (d.success) {
+        // Redirect immediately — either auto-login or success state
+        window.location.href = d.data?.autoLoginUrl ?? '/company/dashboard';
+      } else {
+        setState('error');
+      }
     } finally {
       setClaiming(false);
     }
@@ -75,9 +84,16 @@ export default function ClaimPage() {
               <p className="text-gray-500 text-sm mb-6">
                 You&apos;re about to claim the post from <strong>{claimData.postName}</strong>. This will link it to your OJT Connect PH account.
               </p>
-              <div className="bg-gray-50 rounded-xl p-4 mb-6 text-sm text-gray-600">
-                <span className="font-medium">Email:</span> {claimData.email}
-              </div>
+              {claimData.email && (
+                <div className="bg-gray-50 rounded-xl p-4 mb-4 text-sm text-gray-600">
+                  <span className="font-medium">Email on post:</span> {claimData.email}
+                </div>
+              )}
+              {claimData.postText && (
+                <div className="bg-gray-50 rounded-xl p-4 mb-6 text-sm text-gray-600 line-clamp-3">
+                  {claimData.postText}
+                </div>
+              )}
               <Button onClick={handleClaim} loading={claiming} className="w-full">Confirm Claim</Button>
             </>
           )}

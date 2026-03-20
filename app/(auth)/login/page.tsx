@@ -1,7 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -9,24 +9,39 @@ import { GraduationCap, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const doSignIn = async (email: string, password: string) => {
     setError('');
     setLoading(true);
     try {
-      const result = await signIn('credentials', { email: form.email, password: form.password, redirect: false });
+      const result = await signIn('credentials', { email, password, redirect: false });
       if (result?.error) { setError('Invalid email or password.'); return; }
-      // Redirect based on role — middleware will also handle this
       router.push('/student/dashboard');
       router.refresh();
     } finally {
       setLoading(false);
     }
+  };
+
+  // Auto-login if email+password are in query params
+  useEffect(() => {
+    const email = searchParams.get('email');
+    const password = searchParams.get('password');
+    if (email && password) {
+      setForm({ email, password });
+      doSignIn(email, password);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    doSignIn(form.email, form.password);
   };
 
   return (

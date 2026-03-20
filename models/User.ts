@@ -15,6 +15,10 @@ export interface IUser extends Document<string> {
   profileRef?: string;
   profileType?: ProfileType;
   lastLogin?: Date;
+  resetToken?: string;
+  resetTokenExpiry?: Date;
+  autoLoginToken?: string;
+  autoLoginTokenExpiry?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +45,10 @@ const UserSchema = new Schema<IUser>(
       enum: ['student', 'company', 'university_admin', 'super_admin'] as ProfileType[],
     },
     lastLogin: { type: Date },
+    resetToken: { type: String },
+    resetTokenExpiry: { type: Date },
+    autoLoginToken: { type: String },
+    autoLoginTokenExpiry: { type: Date },
   },
   {
     timestamps: true,

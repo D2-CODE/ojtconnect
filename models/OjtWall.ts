@@ -6,10 +6,12 @@ export type OjtWallStatus = 'unclaimed' | 'claimed' | 'expired' | 'hidden';
 
 export interface IFbLead {
   name?: string;
+  fb_id?: string;
   profile_url?: string;
   profile_pic?: string;
   post_text?: string;
   post_link?: string;
+  post_date?: Date;
   emails?: string;
   phones?: string;
   skills?: string;
@@ -41,10 +43,12 @@ export interface IOjtWall extends Document<string> {
 const FbLeadSchema = new Schema<IFbLead>(
   {
     name: { type: String },
+    fb_id: { type: String },
     profile_url: { type: String },
     profile_pic: { type: String },
     post_text: { type: String },
     post_link: { type: String },
+    post_date: { type: Date },
     emails: { type: String },
     phones: { type: String },
     skills: { type: String },

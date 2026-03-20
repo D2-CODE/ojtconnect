@@ -7,29 +7,9 @@
 
 import nodemailer from "nodemailer";
 import connectDB from "@/lib/mongodb";
-import mongoose from "mongoose";
 import { generateId } from "@/lib/utils";
 import type { EmailType, EmailStatus } from "@/types";
-
-// ---------------------------------------------------------------------------
-// Email log schema
-// ---------------------------------------------------------------------------
-const emailLogSchema = new mongoose.Schema({
-  _id: { type: String },
-  to: { type: String, required: true },
-  subject: { type: String, required: true },
-  type: { type: String, required: true },
-  status: { type: String, required: true },
-  errorMessage: { type: String },
-  relatedEntityId: { type: String },
-  relatedEntityType: { type: String },
-  sentAt: { type: Date },
-  createdAt: { type: Date, default: () => new Date() },
-});
-
-function getEmailLogModel() {
-  return mongoose.models.EmailLog ?? mongoose.model("EmailLog", emailLogSchema);
-}
+import EmailLog from "@/models/EmailLog";
 
 // ---------------------------------------------------------------------------
 // Transporter factory (created once per process)
@@ -66,15 +46,34 @@ async function logEmail(opts: {
 }): Promise<void> {
   try {
     await connectDB();
-    const EmailLog = getEmailLogModel();
     await EmailLog.create({
       _id: generateId(),
-      ...opts,
+      to: opts.to,
+      from: process.env.EMAIL_FROM ?? "noreply@ojtconnect.ph",
+      subject: opts.subject,
+      template: opts.type as import("@/models/EmailLog").EmailTemplate,
+      status: opts.status === "sent" ? "sent" : "failed",
+      statusMessage: opts.errorMessage,
+      relatedId: opts.relatedEntityId,
+      relatedType: (() => {
+        const map: Record<string, string> = {
+          OjtWall: 'ojt_wall',
+          ojt_wall: 'ojt_wall',
+          User: 'user',
+          user: 'user',
+          University: 'university',
+          university: 'university',
+          Student: 'student',
+          student: 'student',
+          Connection: 'connection',
+          connection: 'connection',
+        };
+        return opts.relatedEntityType ? (map[opts.relatedEntityType] ?? undefined) : undefined;
+      })(),
+      attempts: 1,
       sentAt: opts.status === "sent" ? new Date() : undefined,
-      createdAt: new Date(),
     });
   } catch (err) {
-    // Never let logging failures bubble up and break the email send result
     console.error("[EmailLog] Failed to write log:", err);
   }
 }
@@ -94,32 +93,33 @@ export async function sendEmail(
   relatedEntityId?: string,
   relatedEntityType?: string
 ): Promise<boolean> {
+  let sendError: string | undefined;
+
   try {
     const transporter = getTransporter();
-
     await transporter.sendMail({
       from: `"${process.env.NEXT_PUBLIC_APP_NAME ?? "OJT Connect PH"}" <${process.env.EMAIL_FROM ?? "noreply@ojtconnect.ph"}>`,
       to,
       subject,
       html,
     });
-
-    await logEmail({ to, subject, type, status: "sent", relatedEntityId, relatedEntityType });
-    return true;
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error(`[Email] Failed to send to ${to}:`, message);
-    await logEmail({
-      to,
-      subject,
-      type,
-      status: "failed",
-      errorMessage: message,
-      relatedEntityId,
-      relatedEntityType,
-    });
-    return false;
+    sendError = err instanceof Error ? err.message : String(err);
+    console.error(`[Email] Failed to send to ${to}:`, sendError);
   }
+
+  // Always log — success or failure
+  await logEmail({
+    to,
+    subject,
+    type,
+    status: sendError ? "failed" : "sent",
+    errorMessage: sendError,
+    relatedEntityId,
+    relatedEntityType,
+  });
+
+  return !sendError;
 }
 
 // ---------------------------------------------------------------------------
