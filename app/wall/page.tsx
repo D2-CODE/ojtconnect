@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { PostCard } from '@/components/cards/PostCard';
@@ -18,6 +19,28 @@ const TABS = [
 ];
 
 const VALID_TYPES = ['intern', 'internship'];
+
+function PostListingWidget() {
+  const { data: session, status } = useSession();
+  if (status === 'loading') return null;
+  if (session?.user) {
+    const wallUrl = session.user.roleName === 'student' ? '/student/wall' : '/company/wall';
+    return (
+      <div className="bg-[#E8F5F1] rounded-2xl p-5">
+        <h3 className="font-semibold text-[#0F6E56] mb-2">Post Your Listing</h3>
+        <p className="text-sm text-gray-600 mb-4">Manage your OJT listings and reach the right people.</p>
+        <Link href={wallUrl} className="block bg-[#0F6E56] text-white text-sm font-semibold text-center py-2.5 rounded-[10px] hover:bg-[#0A5A45] transition-colors">Go to My Listings</Link>
+      </div>
+    );
+  }
+  return (
+    <div className="bg-[#E8F5F1] rounded-2xl p-5">
+      <h3 className="font-semibold text-[#0F6E56] mb-2">Post Your Listing</h3>
+      <p className="text-sm text-gray-600 mb-4">Create an account to post your OJT or internship listing.</p>
+      <Link href="/register" className="block bg-[#0F6E56] text-white text-sm font-semibold text-center py-2.5 rounded-[10px] hover:bg-[#0A5A45] transition-colors">Get Started Free</Link>
+    </div>
+  );
+}
 
 export default function WallPage() {
   const searchParams = useSearchParams();
@@ -108,11 +131,7 @@ export default function WallPage() {
 
           {/* Sidebar */}
           <aside className="hidden xl:flex flex-col gap-4 w-64 flex-shrink-0">
-            <div className="bg-[#E8F5F1] rounded-2xl p-5">
-              <h3 className="font-semibold text-[#0F6E56] mb-2">Post Your Listing</h3>
-              <p className="text-sm text-gray-600 mb-4">Create an account to post your OJT or internship listing.</p>
-              <Link href="/register" className="block bg-[#0F6E56] text-white text-sm font-semibold text-center py-2.5 rounded-[10px] hover:bg-[#0A5A45] transition-colors">Get Started Free</Link>
-            </div>
+            <PostListingWidget />
             <div className="bg-white border border-gray-200 rounded-2xl p-5">
               <h3 className="font-semibold text-gray-900 mb-2">Are you a university?</h3>
               <p className="text-sm text-gray-500 mb-4">Register your university to verify your students and boost their credibility.</p>

@@ -29,7 +29,14 @@ export async function PATCH(req: NextRequest) {
     await connectDB();
     const { profileType, profileRef } = session.user;
     if (!profileRef) return NextResponse.json({ success: false, error: 'No profile found' }, { status: 404 });
-    const body = await req.json();
+    const raw = await req.json();
+    // Strip empty strings on enum fields to prevent Mongoose ValidationError
+    const ENUM_FIELDS = ['preferredSetup', 'setup', 'companySize', 'internshipSetup'];
+    const body: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(raw)) {
+      if (ENUM_FIELDS.includes(k) && v === '') continue;
+      body[k] = v;
+    }
     let profile = null;
     if (profileType === 'student') profile = await Student.findByIdAndUpdate(profileRef, body, { new: true }).lean();
     else if (profileType === 'company') profile = await Company.findByIdAndUpdate(profileRef, body, { new: true }).lean();

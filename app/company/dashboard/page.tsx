@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { StudentCard } from '@/components/cards/StudentCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 import { Users, Briefcase, ArrowRight, Building2, AlertCircle } from 'lucide-react';
 
 export default function CompanyDashboardPage() {
@@ -13,6 +16,10 @@ export default function CompanyDashboardPage() {
   const [connections, setConnections] = useState<unknown[]>([]);
   const [recentStudents, setRecentStudents] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
+  const [connectId, setConnectId] = useState<string | null>(null);
+  const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const { toast: showToast } = useToast();
 
   useEffect(() => {
     Promise.all([
@@ -28,8 +35,39 @@ export default function CompanyDashboardPage() {
 
   if (loading) return <div className="flex items-center justify-center min-h-[400px]"><LoadingSpinner /></div>;
 
+  const sendConnect = async () => {
+    if (!connectId) return;
+    setSending(true);
+    try {
+      const res = await fetch('/api/connections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toId: connectId, toType: 'student', message }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        showToast('Connection request sent!', 'success');
+        setConnectId(null);
+        setMessage('');
+        // Refresh connections so button hides immediately
+        fetch('/api/connections').then((r) => r.json()).then((d) => { if (d.success) setConnections(d.data); });
+      } else showToast(d.error || 'Failed', 'error');
+    } finally { setSending(false); }
+  };
+
   const isSetup = profile?.companyName;
   const pendingConnections = (connections as Array<{ status: string }>).filter((c) => c.status === 'pending').length;
+  // Map of studentProfileId → connection status
+  const connectionStatusMap = new Map<string, 'pending' | 'accepted' | 'rejected'>(
+    (connections as Array<{ toProfileId: string; status: string }>)
+      .filter((c) => ['pending', 'accepted', 'rejected'].includes(c.status))
+      .map((c) => [c.toProfileId, c.status as 'pending' | 'accepted' | 'rejected'])
+  );
+  const connectedProfileIds = new Set(
+    [...connectionStatusMap.entries()]
+      .filter(([, s]) => ['pending', 'accepted'].includes(s))
+      .map(([id]) => id)
+  );
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -70,6 +108,13 @@ export default function CompanyDashboardPage() {
 
       {/* Quick links */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <Link href="/company/wall" className="bg-white rounded-xl border border-gray-200 p-5 hover:border-[#0F6E56] transition-colors flex items-center justify-between group">
+          <div>
+            <h3 className="font-semibold text-gray-900">My Listings</h3>
+            <p className="text-sm text-gray-500 mt-0.5">Post and manage internship opportunities</p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#0F6E56]" />
+        </Link>
         <Link href="/company/search" className="bg-white rounded-xl border border-gray-200 p-5 hover:border-[#0F6E56] transition-colors flex items-center justify-between group">
           <div>
             <h3 className="font-semibold text-gray-900">Search Students</h3>
@@ -96,10 +141,37 @@ export default function CompanyDashboardPage() {
           <EmptyState icon={Users} title="No students yet" description="Browse verified students to start connecting." />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {recentStudents.map((s) => <StudentCard key={(s as { _id: string })._id} student={s as never} />)}
+            {recentStudents.map((s) => {
+              const student = s as { _id: string };
+              return (
+                <StudentCard
+                  key={student._id}
+                  student={s as never}
+                  connectionStatus={connectionStatusMap.get(student._id) ?? null}
+                  onConnect={connectedProfileIds.has(student._id) ? undefined : (id) => setConnectId(id)}
+                />
+              );
+            })}
           </div>
         )}
       </div>
+
+      {connectId && (
+        <Modal isOpen={true} title="Send Connection Request" onClose={() => { setConnectId(null); setMessage(''); }}>
+          <p className="text-sm text-gray-500 mb-3">Include a short message to introduce yourself.</p>
+          <textarea
+            className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F6E56] resize-none mb-4"
+            rows={3}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Hi, we have an internship opportunity that might be a great fit..."
+          />
+          <div className="flex gap-3 justify-end">
+            <Button variant="outline" onClick={() => { setConnectId(null); setMessage(''); }}>Cancel</Button>
+            <Button onClick={sendConnect} loading={sending}>Send Request</Button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

@@ -23,9 +23,10 @@ interface StudentCardStudent {
 interface StudentCardProps {
   student: StudentCardStudent;
   onConnect?: (id: string) => void;
+  connectionStatus?: 'pending' | 'accepted' | 'rejected' | null;
 }
 
-export function StudentCard({ student, onConnect }: StudentCardProps) {
+export function StudentCard({ student, onConnect, connectionStatus }: StudentCardProps) {
   const name = student.displayName || `${student.firstName || ''} ${student.lastName || ''}`.trim() || 'Student';
   const skills = (student.skills || []).slice(0, 4);
   const isVerified = student.universityVerificationStatus === 'verified';
@@ -54,11 +55,23 @@ export function StudentCard({ student, onConnect }: StudentCardProps) {
 
       {isVerified && <Badge label="Verified" variant="success" />}
 
-      {onConnect && (
-        <Button variant="outline" className="w-full mt-1" onClick={() => onConnect(student._id)}>
-          Connect
-        </Button>
-      )}
+      <div className="w-full mt-1">
+        {connectionStatus === 'accepted' && (
+          <div className="w-full flex items-center justify-center gap-1.5 py-2 rounded-[10px] bg-[#E8F5F1] text-[#0F6E56] text-sm font-semibold">
+            <span>✓</span> Connected
+          </div>
+        )}
+        {connectionStatus === 'pending' && (
+          <div className="w-full flex items-center justify-center gap-1.5 py-2 rounded-[10px] bg-amber-50 text-amber-600 text-sm font-semibold">
+            <span>⏳</span> Request Sent
+          </div>
+        )}
+        {!connectionStatus && onConnect && (
+          <Button variant="outline" className="w-full" onClick={() => onConnect(student._id)}>
+            Connect
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

@@ -12,12 +12,16 @@ import { truncate, formatDate } from '@/lib/utils';
 
 interface Post {
   _id: string;
+  source?: string;
+  postedByName?: string;
+  title?: string;
+  description?: string;
   SectionData: { fbleads: { name: string; post_text: string; lead_type: string } };
   status: string;
   createdAt: string;
 }
 
-const TABS = [{ value: 'all', label: 'All' }, { value: 'intern', label: 'Seeking OJT' }, { value: 'internship', label: 'Offering' }, { value: 'claimed', label: 'Claimed' }];
+const TABS = [{ value: 'all', label: 'All' }, { value: 'intern', label: 'Seeking OJT' }, { value: 'internship', label: 'Offering' }, { value: 'claimed', label: 'Claimed' }, { value: 'company', label: 'Company Posts' }, { value: 'student', label: 'Student Posts' }];
 
 export default function AdminPostsPage() {
   const { toast: showToast } = useToast();
@@ -33,6 +37,8 @@ export default function AdminPostsPage() {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (tab === 'claimed') params.set('status', 'claimed');
+    else if (tab === 'company') params.set('source', 'company');
+    else if (tab === 'student') params.set('source', 'student');
     else if (tab !== 'all') params.set('type', tab);
     if (search) params.set('search', search);
     fetch(`/api/wall?${params}`).then((r) => r.json()).then((d) => {
@@ -77,6 +83,7 @@ export default function AdminPostsPage() {
                 <tr className="border-b border-gray-100 bg-gray-50">
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Name</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Post</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Source</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Type</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Status</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Date</th>
@@ -86,11 +93,16 @@ export default function AdminPostsPage() {
               <tbody>
                 {posts.map((p, i) => {
                   const fb = p.SectionData?.fbleads;
+                  const isNative = p.source === 'company' || p.source === 'student';
+                  const displayName = isNative ? p.postedByName : fb?.name;
+                  const displayText = isNative ? p.description : fb?.post_text;
+                  const leadType = isNative ? (p.source === 'student' ? 'intern' : 'internship') : fb?.lead_type;
                   return (
                     <tr key={p._id} className={`border-b border-gray-100 ${i % 2 === 0 ? '' : 'bg-gray-50/50'}`}>
-                      <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{fb?.name || 'Anonymous'}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs max-w-xs">{truncate(fb?.post_text || '', 80)}</td>
-                      <td className="px-4 py-3"><Badge label={fb?.lead_type === 'intern' ? 'Seeking OJT' : 'Offering'} variant={fb?.lead_type === 'intern' ? 'primary' : 'success'} /></td>
+                      <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{displayName || 'Anonymous'}</td>
+                      <td className="px-4 py-3 text-gray-500 text-xs max-w-xs">{truncate(isNative ? (p.title || displayText || '') : (displayText || ''), 80)}</td>
+                      <td className="px-4 py-3"><Badge label={p.source || 'scraped'} variant={isNative ? 'success' : 'neutral'} /></td>
+                      <td className="px-4 py-3"><Badge label={leadType === 'intern' ? 'Seeking OJT' : 'Offering'} variant={leadType === 'intern' ? 'primary' : 'success'} /></td>
                       <td className="px-4 py-3"><Badge label={p.status || 'active'} variant={p.status === 'claimed' ? 'success' : 'neutral'} /></td>
                       <td className="px-4 py-3 text-gray-400 text-xs">{formatDate(p.createdAt)}</td>
                       <td className="px-4 py-3 text-right">

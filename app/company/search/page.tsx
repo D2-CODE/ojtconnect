@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 import { Search, Users } from 'lucide-react';
 
 export default function CompanySearchPage() {
@@ -17,8 +18,25 @@ export default function CompanySearchPage() {
   const [connectId, setConnectId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
-  const [sentIds, setSentIds] = useState<string[]>([]);
+  const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
+  const [connectionStatusMap, setConnectionStatusMap] = useState<Map<string, 'pending' | 'accepted' | 'rejected'>>(new Map());
+  const { toast: showToast } = useToast();
   const limit = 12;
+
+  // Load existing connections once on mount to pre-hide Connect buttons
+  useEffect(() => {
+    fetch('/api/connections').then((r) => r.json()).then((d) => {
+      if (d.success) {
+        const map = new Map<string, 'pending' | 'accepted' | 'rejected'>(
+          (d.data as Array<{ toProfileId: string; status: string }>)
+            .filter((c) => ['pending', 'accepted', 'rejected'].includes(c.status))
+            .map((c) => [c.toProfileId, c.status as 'pending' | 'accepted' | 'rejected'])
+        );
+        setConnectedIds(new Set([...map.entries()].filter(([, s]) => ['pending', 'accepted'].includes(s)).map(([id]) => id)));
+        setConnectionStatusMap(map);
+      }
+    });
+  }, []);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -41,10 +59,14 @@ export default function CompanySearchPage() {
         body: JSON.stringify({ toId: connectId, toType: 'student', message }),
       });
       const d = await res.json();
-      if (d.success) { setSentIds((prev) => [...prev, connectId]); setConnectId(null); setMessage(''); }
-    } finally {
-      setSending(false);
-    }
+      if (d.success) {
+        setConnectedIds((prev) => new Set([...prev, connectId]));
+        setConnectionStatusMap((prev) => new Map([...prev, [connectId, 'pending']]));
+        setConnectId(null);
+        setMessage('');
+        showToast('Connection request sent!', 'success');
+      } else showToast(d.error || 'Failed', 'error');
+    } finally { setSending(false); }
   };
 
   return (
@@ -78,7 +100,8 @@ export default function CompanySearchPage() {
                 <StudentCard
                   key={student._id}
                   student={s as never}
-                  onConnect={sentIds.includes(student._id) ? undefined : (id) => setConnectId(id)}
+                  connectionStatus={connectionStatusMap.get(student._id) ?? null}
+                  onConnect={connectedIds.has(student._id) ? undefined : (id) => setConnectId(id)}
                 />
               );
             })}

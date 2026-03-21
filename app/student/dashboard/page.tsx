@@ -111,6 +111,13 @@ export default function StudentDashboardPage() {
           </div>
           <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#0F6E56]" />
         </Link>
+        <Link href="/student/wall" className="bg-white rounded-xl border border-gray-200 p-5 hover:border-[#0F6E56] transition-colors flex items-center justify-between group">
+          <div>
+            <h3 className="font-semibold text-gray-900">My OJT Posts</h3>
+            <p className="text-sm text-gray-500 mt-0.5">{verificationStatus === 'verified' ? 'Post your availability for companies' : 'Requires university verification'}</p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#0F6E56]" />
+        </Link>
         <Link href="/student/connections" className="bg-white rounded-xl border border-gray-200 p-5 hover:border-[#0F6E56] transition-colors flex items-center justify-between group">
           <div>
             <h3 className="font-semibold text-gray-900">My Connections</h3>

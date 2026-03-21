@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export type LeadType = 'intern' | 'internship';
 export type OjtWallStatus = 'unclaimed' | 'claimed' | 'expired' | 'hidden';
+export type OjtWallSource = 'scraped' | 'company' | 'student';
 
 export interface IFbLead {
   name?: string;
@@ -26,6 +27,18 @@ export interface ISectionData {
 
 export interface IOjtWall extends Document<string> {
   _id: string;
+  source?: OjtWallSource;
+  postedBy?: string;
+  postedByName?: string;
+  title?: string;
+  description?: string;
+  skills?: string[];
+  setup?: string;
+  location?: string;
+  allowance?: string;
+  slots?: number;
+  hoursRequired?: number;
+  deadline?: Date;
   SectionData?: ISectionData;
   claimedBy?: string;
   claimedAt?: Date;
@@ -72,6 +85,18 @@ const SectionDataSchema = new Schema<ISectionData>(
 const OjtWallSchema = new Schema<IOjtWall>(
   {
     _id: { type: String, required: true },
+    source: { type: String, enum: ['scraped', 'company', 'student'] as OjtWallSource[], default: 'scraped' },
+    postedBy: { type: String },
+    postedByName: { type: String },
+    title: { type: String },
+    description: { type: String },
+    skills: { type: [String], default: [] },
+    setup: { type: String },
+    location: { type: String },
+    allowance: { type: String },
+    slots: { type: Number },
+    hoursRequired: { type: Number },
+    deadline: { type: Date },
     SectionData: { type: SectionDataSchema },
     claimedBy: { type: String, ref: 'User' },
     claimedAt: { type: Date },

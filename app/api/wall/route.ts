@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import OjtWall from '@/models/OjtWall';
+import { auth } from '@/lib/auth';
+import { generateId } from '@/lib/utils';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,15 +13,53 @@ export async function GET(req: NextRequest) {
     const type = searchParams.get('type');
     const search = searchParams.get('search');
     const status = searchParams.get('status');
+    const source = searchParams.get('source');
+    const mine = searchParams.get('mine') === 'true';
+    let postedBy = searchParams.get('postedBy');
 
-    const query: Record<string, unknown> = { isActive: true };
-    if (type === 'intern' || type === 'internship') query['SectionData.fbleads.lead_type'] = type;
-    if (status && status !== 'all') query.status = status;
+    let mineUserName: string | null = null;
+    if (mine) {
+      const session = await auth();
+      if (!session?.user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      mineUserName = session.user.name ?? null;
+      postedBy = session.user.profileRef;
+      if (!postedBy) {
+        const User = (await import('@/models/User')).default;
+        const user = await User.findById(session.user.userId).lean<{ profileRef?: string }>();
+        postedBy = user?.profileRef ?? null;
+      }
+    }
+
+    const query: Record<string, unknown> = {};
+
+    if (mine) {
+      const orClauses: Record<string, unknown>[] = [];
+      if (postedBy) orClauses.push({ postedBy });
+      if (mineUserName) {
+        const nameRegex = { $regex: mineUserName, $options: 'i' };
+        orClauses.push({ 'SectionData.fbleads.name': nameRegex });
+        orClauses.push({ postedByName: nameRegex });
+      }
+      if (orClauses.length > 0) query['$or'] = orClauses;
+    } else {
+      query.isActive = true;
+      if (postedBy) query.postedBy = postedBy;
+      if (source) query.source = source;
+      if (type === 'intern' || type === 'internship') {
+        if (source !== 'company' && source !== 'student') {
+          query['SectionData.fbleads.lead_type'] = type;
+        }
+      }
+      if (status && status !== 'all') query.status = status;
+    }
+
     if (search) {
       query['$or'] = [
         { 'SectionData.fbleads.name': { $regex: search, $options: 'i' } },
         { 'SectionData.fbleads.post_text': { $regex: search, $options: 'i' } },
         { 'SectionData.fbleads.skills': { $regex: search, $options: 'i' } },
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
       ];
     }
 
@@ -30,6 +70,67 @@ export async function GET(req: NextRequest) {
     ]);
 
     return NextResponse.json({ success: true, data: posts, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const role = session.user.roleName;
+    if (role !== 'company' && role !== 'student') {
+      return NextResponse.json({ success: false, error: 'Only companies and students can post' }, { status: 403 });
+    }
+    await connectDB();
+    let profileRef = session.user.profileRef;
+    if (!profileRef) {
+      const User = (await import('@/models/User')).default;
+      const user = await User.findById(session.user.userId).lean<{ profileRef?: string }>();
+      profileRef = user?.profileRef ?? null;
+    }
+    if (!profileRef) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 400 });
+    if (role === 'student') {
+      const Student = (await import('@/models/Student')).default;
+      const student = await Student.findById(profileRef).lean();
+      if (!student || student.universityVerificationStatus !== 'verified') {
+        return NextResponse.json({ success: false, error: 'You must be university-verified before posting on the wall.' }, { status: 403 });
+      }
+    }
+    const body = await req.json();
+    const { title, description, skills, setup, location, allowance, slots, hoursRequired, deadline } = body;
+    if (!title || !description) {
+      return NextResponse.json({ success: false, error: 'Title and description are required' }, { status: 400 });
+    }
+    const leadType = role === 'company' ? 'internship' : 'intern';
+    const post = await OjtWall.create({
+      _id: generateId(),
+      source: role,
+      postedBy: profileRef,
+      postedByName: session.user.name,
+      title,
+      description,
+      skills: skills || [],
+      setup: setup || '',
+      location: location || '',
+      allowance: allowance || '',
+      slots: slots || 1,
+      hoursRequired: hoursRequired || 300,
+      deadline: deadline ? new Date(deadline) : undefined,
+      SectionData: {
+        fbleads: {
+          name: session.user.name,
+          post_text: description,
+          skills: Array.isArray(skills) ? skills.join(', ') : (skills || ''),
+          lead_type: leadType,
+        },
+      },
+      status: 'unclaimed',
+      isActive: true,
+      createdAt: new Date(),
+    });
+    return NextResponse.json({ success: true, data: post }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }

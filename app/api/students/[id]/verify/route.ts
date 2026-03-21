@@ -8,9 +8,7 @@ import { auth } from '@/lib/auth';
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
-    if (!session?.user || !['university_admin', 'super_admin'].includes(session.user.roleName)) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    if (!session?.user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     await connectDB();
     const { id } = await params;
     const { action, reason } = await req.json();
@@ -18,8 +16,31 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const student = await Student.findById(id);
     if (!student) return NextResponse.json({ success: false, error: 'Student not found' }, { status: 404 });
 
-    // University admin can only verify students from their university
-    if (session.user.roleName === 'university_admin') {
+    const role = session.user.roleName;
+
+    // Student can only request verification for their own profile
+    if (action === 'request') {
+      if (role !== 'student' || session.user.profileRef !== id) {
+        return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+      }
+      if (!student.universityId) {
+        return NextResponse.json({ success: false, error: 'Set your university in your profile first' }, { status: 400 });
+      }
+      if (!['unverified', 'rejected'].includes(student.universityVerificationStatus)) {
+        return NextResponse.json({ success: false, error: 'Already pending or verified' }, { status: 400 });
+      }
+      student.universityVerificationStatus = 'pending';
+      await student.save();
+      return NextResponse.json({ success: true, data: student });
+    }
+
+    // verify / reject — only university_admin or super_admin
+    if (!['university_admin', 'super_admin'].includes(role)) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // University admin can only act on students from their university
+    if (role === 'university_admin') {
       const uniAdmin = await University.findOne({ userId: session.user.userId });
       if (!uniAdmin || String(uniAdmin._id) !== String(student.universityId)) {
         return NextResponse.json({ success: false, error: 'Cannot verify student from another university' }, { status: 403 });
@@ -32,21 +53,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       student.universityVerifiedBy = session.user.userId;
       student.isVisible = true;
       await User.findOneAndUpdate({ profileRef: id }, { profileComplete: true });
+      if (student.universityId) {
+        await University.findByIdAndUpdate(student.universityId, { $inc: { studentCount: 1 } });
+      }
     } else if (action === 'reject') {
       student.universityVerificationStatus = 'rejected';
-      student.universityRejectionReason = reason;
+      student.universityRejectionReason = reason || '';
       student.isVisible = false;
-    } else if (action === 'request') {
-      student.universityVerificationStatus = 'pending';
+    } else {
+      return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
     }
 
     await student.save();
-
-    // Update university student count
-    if (action === 'verify') {
-      await University.findByIdAndUpdate(student.universityId, { $inc: { studentCount: 1 } });
-    }
-
     return NextResponse.json({ success: true, data: student });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });

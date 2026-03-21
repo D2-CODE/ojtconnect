@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { GraduationCap, LayoutDashboard, Search, User, Building2, Users, Mail, FileText, Eye, LogOut } from 'lucide-react';
+import { GraduationCap, LayoutDashboard, Search, User, Building2, Users, Mail, FileText, Eye, LogOut, Newspaper } from 'lucide-react';
 
 type Role = 'student' | 'company' | 'university_admin' | 'super_admin';
 
@@ -12,12 +12,14 @@ const navItems: Record<Role, NavItem[]> = {
   student: [
     { label: 'Dashboard', href: '/student/dashboard', icon: LayoutDashboard },
     { label: 'Browse Wall', href: '/wall', icon: Search },
+    { label: 'My OJT Posts', href: '/student/wall', icon: Newspaper },
     { label: 'My Profile', href: '/student/profile', icon: User },
     { label: 'University Verification', href: '/student/verification', icon: GraduationCap },
     { label: 'Connections', href: '/student/connections', icon: Users },
   ],
   company: [
     { label: 'Dashboard', href: '/company/dashboard', icon: LayoutDashboard },
+    { label: 'My Listings', href: '/company/wall', icon: Newspaper },
     { label: 'Browse Interns', href: '/company/search', icon: Search },
     { label: 'My Profile', href: '/company/profile', icon: Building2 },
     { label: 'Connections', href: '/company/connections', icon: Users },
