@@ -5,7 +5,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { SkillTag } from '@/components/ui/SkillTag';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { ArrowLeft, Mail, Phone, Calendar } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, Building2, MapPin, Users, Banknote, Clock, AlarmClock } from 'lucide-react';
 
 async function getPost(id: string) {
   try {
@@ -80,12 +80,12 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
 
             {isNativePost && (
               <div className="flex flex-wrap gap-4 mb-6 text-sm text-gray-600">
-                {post.setup && <span className="flex items-center gap-1">🏢 <strong>Setup:</strong> {post.setup}</span>}
-                {post.location && <span className="flex items-center gap-1">📍 <strong>Location:</strong> {post.location}</span>}
-                {post.slots && <span className="flex items-center gap-1">👥 <strong>Slots:</strong> {post.slots}</span>}
-                {post.allowance && <span className="flex items-center gap-1">💰 <strong>Allowance:</strong> {post.allowance}</span>}
-                {post.hoursRequired && <span className="flex items-center gap-1">⏱ <strong>Hours:</strong> {post.hoursRequired}</span>}
-                {post.deadline && <span className="flex items-center gap-1">⏰ <strong>Deadline:</strong> {new Date(post.deadline).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>}
+                {post.setup && <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4 text-gray-400" /><strong>Setup:</strong> {post.setup}</span>}
+                {post.location && <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-gray-400" /><strong>Location:</strong> {post.location}</span>}
+                {post.slots && <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-gray-400" /><strong>Slots:</strong> {post.slots}</span>}
+                {post.allowance && <span className="flex items-center gap-1.5"><Banknote className="w-4 h-4 text-gray-400" /><strong>Allowance:</strong> {post.allowance}</span>}
+                {post.hoursRequired && <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-gray-400" /><strong>Hours:</strong> {post.hoursRequired}</span>}
+                {post.deadline && <span className="flex items-center gap-1.5"><AlarmClock className="w-4 h-4 text-gray-400" /><strong>Deadline:</strong> {new Date(post.deadline).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>}
               </div>
             )}
 

@@ -1,12 +1,12 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { GraduationCap, CheckCircle, XCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? '';
   const router = useRouter();
@@ -48,6 +48,85 @@ export default function ResetPasswordPage() {
   };
 
   return (
+    <>
+      {state === 'validating' && (
+        <div className="text-center py-8">
+          <Loader2 className="w-10 h-10 text-[#0F6E56] animate-spin mx-auto mb-4" />
+          <p className="text-gray-500">Validating your reset link…</p>
+        </div>
+      )}
+
+      {state === 'invalid' && (
+        <div className="text-center py-4">
+          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+            <XCircle className="w-6 h-6 text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Link expired or invalid</h2>
+          <p className="text-gray-500 text-sm mb-6">This reset link is no longer valid. Please request a new one.</p>
+          <Link href="/forgot-password"><Button variant="primary" className="w-full">Request New Link</Button></Link>
+        </div>
+      )}
+
+      {state === 'valid' && (
+        <>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Set new password</h1>
+          <p className="text-gray-500 text-sm mb-6">Choose a strong password for your account.</p>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="relative">
+              <Input
+                label="New Password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Min. 8 characters"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <Input
+              label="Confirm Password"
+              type="password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder="Repeat your password"
+              required
+            />
+            {error && <p className="text-sm text-red-500">{error}</p>}
+            <Button type="submit" loading={loading} className="w-full">Reset Password</Button>
+          </form>
+        </>
+      )}
+
+      {state === 'success' && (
+        <div className="text-center py-4">
+          <div className="w-12 h-12 rounded-full bg-[#E8F5F1] flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-6 h-6 text-[#0F6E56]" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Password reset!</h2>
+          <p className="text-gray-500 text-sm mb-6">Your password has been updated. You can now sign in.</p>
+          <Button onClick={() => router.push('/login')} className="w-full">Go to Sign In</Button>
+        </div>
+      )}
+
+      {state !== 'success' && (
+        <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+          <Link href="/login" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+            Back to Sign In
+          </Link>
+        </div>
+      )}
+    </>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
@@ -57,79 +136,9 @@ export default function ResetPasswordPage() {
             </div>
             <span className="font-bold text-gray-900">OJT Connect PH</span>
           </div>
-
-          {state === 'validating' && (
-            <div className="text-center py-8">
-              <Loader2 className="w-10 h-10 text-[#0F6E56] animate-spin mx-auto mb-4" />
-              <p className="text-gray-500">Validating your reset link…</p>
-            </div>
-          )}
-
-          {state === 'invalid' && (
-            <div className="text-center py-4">
-              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
-                <XCircle className="w-6 h-6 text-red-500" />
-              </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Link expired or invalid</h2>
-              <p className="text-gray-500 text-sm mb-6">This reset link is no longer valid. Please request a new one.</p>
-              <Link href="/forgot-password"><Button variant="primary" className="w-full">Request New Link</Button></Link>
-            </div>
-          )}
-
-          {state === 'valid' && (
-            <>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Set new password</h1>
-              <p className="text-gray-500 text-sm mb-6">Choose a strong password for your account.</p>
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <div className="relative">
-                  <Input
-                    label="New Password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Min. 8 characters"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                <Input
-                  label="Confirm Password"
-                  type="password"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  placeholder="Repeat your password"
-                  required
-                />
-                {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button type="submit" loading={loading} className="w-full">Reset Password</Button>
-              </form>
-            </>
-          )}
-
-          {state === 'success' && (
-            <div className="text-center py-4">
-              <div className="w-12 h-12 rounded-full bg-[#E8F5F1] flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-6 h-6 text-[#0F6E56]" />
-              </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Password reset!</h2>
-              <p className="text-gray-500 text-sm mb-6">Your password has been updated. You can now sign in.</p>
-              <Button onClick={() => router.push('/login')} className="w-full">Go to Sign In</Button>
-            </div>
-          )}
-
-          {state !== 'success' && (
-            <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-              <Link href="/login" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-                Back to Sign In
-              </Link>
-            </div>
-          )}
+          <Suspense>
+            <ResetPasswordForm />
+          </Suspense>
         </div>
       </div>
     </div>

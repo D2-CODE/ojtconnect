@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (session.user.roleName === 'student' && session.user.profileRef !== id) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
-    const student = await Student.findByIdAndUpdate(id, body, { new: true }).lean();
+    const student = await Student.findByIdAndUpdate(id, { $set: body }, { new: true }).lean();
     return NextResponse.json({ success: true, data: student });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });

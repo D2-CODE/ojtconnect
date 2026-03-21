@@ -10,12 +10,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     await connectDB();
     const { id } = await params;
     const { status } = await req.json();
-    const conn = await Connection.findByIdAndUpdate(
+
+    const conn = await Connection.findById(id).lean<{ fromUserId: string; toUserId: string; status: string }>();
+    if (!conn) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+
+    const uid = session.user.userId;
+    const isAdmin = session.user.roleName === 'super_admin';
+    // accept/reject — only recipient; withdraw — only sender
+    const canAct =
+      isAdmin ||
+      (['accepted', 'rejected'].includes(status) && conn.toUserId === uid) ||
+      (status === 'withdrawn' && conn.fromUserId === uid);
+    if (!canAct) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+
+    const updated = await Connection.findByIdAndUpdate(
       id,
       { status, respondedAt: ['accepted', 'rejected'].includes(status) ? new Date() : undefined },
       { new: true }
     ).lean();
-    return NextResponse.json({ success: true, data: conn });
+    return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }

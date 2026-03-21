@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       _id: generateId(),
       fromUserId: session.user.userId,
       fromType,
-      fromProfileId,
+      fromProfileId: fromProfileId ?? undefined,
       toUserId: toUser._id,
       toType,
       toProfileId: toId,

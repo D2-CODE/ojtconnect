@@ -54,7 +54,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       'SectionData.fbleads.skills': Array.isArray(skills) ? skills.join(', ') : (skills || ''),
       'SectionData.fbleads.name': title,
       postedBy: profileRef,
-      postedByName: session.user.name,
       source: session.user.roleName,
     };
 
