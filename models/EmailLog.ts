@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 export type EmailTemplate =
   | 'claim_invite'
   | 'university_verification'
+  | 'university_verified'
   | 'student_verified'
   | 'connection_request'
   | 'welcome';
@@ -43,6 +44,7 @@ const EmailLogSchema = new Schema<IEmailLog>(
       enum: [
         'claim_invite',
         'university_verification',
+        'university_verified',
         'student_verified',
         'connection_request',
         'welcome',

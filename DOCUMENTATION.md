@@ -1,6 +1,6 @@
 # OJT Connect PH — Complete System Documentation
 
-> Last updated: March 2026
+> Last updated: June 2026
 > Tech Stack: Next.js 15 (App Router), TypeScript, MongoDB (Mongoose), NextAuth v5, Nodemailer, bcryptjs
 
 ---
@@ -24,6 +24,7 @@
 15. [Role & Permission System](#15-role--permission-system)
 16. [Seed Data](#16-seed-data)
 17. [Known Issues & Notes](#17-known-issues--notes)
+18. [Changelog](#18-changelog)
 
 ---
 
@@ -246,7 +247,11 @@ File: `lib/auth.ts`
 
 ### Login with query params (Auto-login)
 
-The login page (`app/(auth)/login/page.tsx`) reads `?email=` and `?password=` from the URL and auto-submits `signIn()` on page load. This is used by the claim flow to instantly log in users after claiming a post.
+The login page (`app/(auth)/login/page.tsx`) reads `?email=` and `?password=` from the URL.
+- Pre-fills the email field when `?email=` is present
+- Auto-submits `signIn()` on mount **only when both** `?email=` AND `?password=` are present
+- Used by the claim flow (new users) to instantly log in after claiming a post
+- Existing users who claim a post are redirected to `/login?email=...` only — they must enter their password
 
 ---
 
@@ -305,7 +310,10 @@ If found → skip. This prevents spam even if the same post is scraped multiple 
 
 | Method | Route | Auth | Description |
 |---|---|---|---|
-| GET | `/api/wall` | None (public) | Get all active posts, supports filter by lead_type and search |
+| GET | `/api/wall` | None / Required | Get all active posts. With `?mine=true` returns only the session user's posts. Supports `?source=`, `?search=`, `?lead_type=` filters |
+| POST | `/api/wall` | Required | Create a new wall post. For `role === 'company'`, fetches `companyName` from Company model and uses it as `postedByName` |
+| PATCH | `/api/wall/[id]` | Required | Update own post. Uses `$set` to avoid wiping fields. Ownership checked via `includes()` on name |
+| DELETE | `/api/wall/[id]` | Required | Hard-delete own post via `findByIdAndDelete`. Ownership checked via `includes()` on name |
 
 ### Claim
 
@@ -456,16 +464,51 @@ User receives claim_invite email
 - Login page auto-submits → user lands on dashboard
 
 **Case 3 — User NOT logged in, email EXISTS in DB:**
-- Password reset to new random 12-char value
-- `autoLoginUrl` = `/login?email=...&password=...`
-- No email sent — instant redirect to `autoLoginUrl`
-- Login page auto-submits → user lands on dashboard
+- Password is **NOT changed** (fixed — previously was being reset)
+- Returns `autoLoginUrl` = `/login?email=...` (email only, no password)
+- User is redirected to login page with email pre-filled
+- User must enter their own password manually
 
 ### claimedBy relationship
 
 ```
 OjtWall.claimedBy → User._id → User.profileRef → Company._id
 ```
+
+### Student & Company Wall (Authenticated)
+
+Both students and companies have their own wall pages for posting and managing their own listings.
+
+**Student Wall** (`/student/wall`):
+- Fetches posts with `?mine=true` — resolves `profileRef` from DB (not stale JWT)
+- `mine=true` query uses `$or: [{ postedBy }, { 'SectionData.fbleads.name': regex }, { postedByName: regex }]` to handle legacy posts
+- New post modal pre-fills fields from the student's profile
+- On save, fires `PATCH /api/profile` in parallel with the wall POST to sync profile changes
+- After edit, updates local state directly from response (`d.data`) — no re-fetch needed
+- Legacy field fallback handled by `resolvePost()` helper
+
+**Company Wall** (`/company/wall`):
+- Fetches posts with `?mine=true&source=company`
+- `postedByName` is always the company's `companyName` from the Company model (not the login name)
+
+**Post Your Listing CTA** (landing/public pages):
+- Students → `/student/wall`
+- Companies → `/company/wall`
+- Guests → `/register`
+
+### Wall API — Key Implementation Details
+
+**`app/api/wall/route.ts`**
+- `mine=true`: resolves `profileRef` from DB via `User.findById(userId)` to avoid stale JWT
+- `$or` query covers: `postedBy` (exact), `SectionData.fbleads.name` (`$regex` contains), `postedByName` (`$regex` contains)
+- No recovery block — deleted posts stay deleted
+- POST: fetches `Company.companyName` when `role === 'company'` and stamps it as `postedByName` and `SectionData.fbleads.name`
+
+**`app/api/wall/[id]/route.ts`**
+- `resolveProfileRef()` helper — always reads fresh `profileRef` from DB
+- `checkOwner()` helper — uses `includes()` for name matching (handles legacy name mismatches like `"yug patel WEFDX"`)
+- PATCH: builds clean `updateFields` object, wraps in `{ $set: updateFields }` to avoid wiping existing fields
+- DELETE: `findByIdAndDelete` (hard delete, no soft-delete / status change)
 
 ---
 
@@ -582,7 +625,7 @@ Route: `GET /api/auth/auto-login?token=TOKEN`
 | `Input` | Labeled input with error state |
 | `Badge` | Color-coded badge |
 | `Avatar` | Initials-based avatar |
-| `Modal` | Dialog overlay |
+| `Modal` | Dialog overlay — sticky header with title + close button separated by `border-b`. Content scrolls inside `flex-1 overflow-y-auto`. Max height `90vh` |
 | `Toast` | Notification toast |
 | `Tabs` | Tab switcher |
 | `Select` | Dropdown select |
@@ -604,7 +647,7 @@ Route: `GET /api/auth/auto-login?token=TOKEN`
 
 | Component | Description |
 |---|---|
-| `PostCard` | OJT Wall post card — shows name, lead_type badge, skills, claim status |
+| `PostCard` | OJT Wall post card — shows name, lead_type badge, skills, claim status. Uses lucide icons: `Monitor` (setup), `MapPin` (location), `Users` (slots), `Banknote` (allowance), `CheckCircle2`/`Clock` (status). Hover state: `hover:border-gray-300` |
 | `StudentCard` | Student profile card |
 | `UniversityCard` | University card |
 
@@ -669,8 +712,8 @@ These email functions exist in `lib/email.ts` but are not yet called from their 
 - `sendUniversityVerifiedEmail` — not called in `POST /api/universities/[id]/verify`
 - `sendWelcomeEmail` — not called after registration
 
-### No Company Post Creation UI
-Companies cannot create wall posts from inside the app. All posts come from the scraper only. The `ojt_wall: canAdd: true` permission exists in the Role schema but no UI or API implements it.
+### Company & Student Wall Post Creation
+Companies and students can now create wall posts from their respective wall pages (`/company/wall`, `/student/wall`). The `POST /api/wall` endpoint handles creation for both roles. Scraper-imported posts remain the primary source for the public wall.
 
 ### Student Profile — No University Picker
 The `universityId` field exists in the Student model but the `/student/profile` edit form does not expose it. This blocks the university verification request flow for newly registered students.
@@ -681,10 +724,65 @@ The `universityId` field exists in the Student model but the `/student/profile` 
 ### Claim Token vs Auto-Login Token
 - `claimToken` — on `OjtWall`, used to identify which post is being claimed
 - `autoLoginToken` — on `User`, used for JWT-cookie-based auto-login (built but not used in current flow)
-- Current auto-login uses `?email=&password=` URL params instead
+- New users: auto-login uses `?email=&password=` URL params
+- Existing users: redirected to `/login?email=...` only — password NOT changed or exposed
 
 ### Slug Uniqueness
 Company and University slugs are generated via `slugify()` but there is no retry on collision. The claim flow appends the last 4 chars of the company ID to reduce collision risk.
 
 ### SEED_DUMMY_DATA
 Set to `true` in `.env.local`. The seeder has already run once — it will skip on all subsequent starts. Set to `false` in production.
+
+### Legacy Post Structure
+Some scraped posts (e.g. `_id: "1774009662618760"`) have no `postedBy`, no `source`, no `title` — all data lives in `SectionData.fbleads`. The name field may include suffixes (e.g. `"yug patel WEFDX"`) that don't exactly match the session user's name. The `mine=true` query and `checkOwner()` both use `$regex` / `includes()` to handle this.
+
+### Session profileRef Staleness
+The JWT can be stale — `profileRef` in the session token may not reflect the latest DB value. All ownership checks and `mine=true` queries resolve `profileRef` fresh from `User.findById(userId)` rather than trusting the session.
+
+---
+
+## 18. Changelog
+
+### June 2026
+
+#### Wall API — `mine=true` & Ownership Fixes
+- `GET /api/wall?mine=true` now resolves `profileRef` from DB (not JWT) to avoid stale session issues
+- Query changed from exact name match to `$regex` contains match — fixes legacy posts with name suffixes (e.g. `"yug patel WEFDX"`)
+- `checkOwner()` in `[id]/route.ts` uses `includes()` instead of exact match for both PATCH and DELETE
+- PATCH now wraps update fields in `{ $set: updateFields }` — previously passed body directly, wiping all other fields
+- DELETE changed to `findByIdAndDelete` (hard delete)
+- Removed recovery block from GET that was resetting `status: 'unclaimed'` on every load when `total === 0`, which was undoing deletes
+- `postedByName` is now always stamped on POST/PATCH so `mine=true` re-fetch returns the post correctly
+
+#### Company Display Name Fix
+- `POST /api/wall` now fetches `companyName` from the `Company` model when `role === 'company'`
+- Uses `companyName` as both `postedByName` and `SectionData.fbleads.name` instead of `session.user.name` (login name)
+
+#### Claim Flow — Password Reset Fix
+- When an existing user claims a scraped post, their password is **no longer reset**
+- Returns `autoLoginUrl: /login?email=...` (email only) — user must enter their own password
+- Previously was resetting password and auto-logging in, which was a security issue
+
+#### Student Wall — Profile Pre-fill & Sync
+- New post modal pre-fills fields from the student's profile
+- On save, `PATCH /api/profile` fires in parallel with the wall POST to sync profile changes
+- After edit, local state updated directly from `d.data` — no re-fetch
+
+#### UI Polish — Lucide Icons
+- Replaced all emoji icons with lucide-react icons across all wall pages and cards
+- `PostCard`: `Monitor` (setup), `MapPin` (location), `Users` (slots), `Banknote` (allowance), `CheckCircle2`/`Clock` (status)
+- `student/wall/page.tsx`: `MapPin` (location), `Timer` (duration), `Clock` (date)
+- `company/wall/page.tsx`: `MapPin`, `Banknote`, `Users`, `CalendarClock`, `Clock`
+
+#### Modal Component Rewrite
+- Sticky header with title + X button separated by `border-b`
+- Content area: `flex-1 overflow-y-auto px-6 py-5`
+- Max height: `90vh`
+- Removed inner `max-h-[70vh] overflow-y-auto` scroll containers from modal content in student/company wall pages
+
+#### Claim Page — LoadingSpinner
+- `app/claim/[token]/page.tsx` now uses the `LoadingSpinner` component instead of `Loader2` from lucide-react
+
+#### Login Page — Email Pre-fill
+- Pre-fills email field from `?email=` query param
+- Auto-submits only when **both** `?email=` and `?password=` are present (not on email-only redirect)

@@ -4,6 +4,7 @@ import Student from '@/models/Student';
 import User from '@/models/User';
 import University from '@/models/University';
 import { auth } from '@/lib/auth';
+import { sendStudentVerifiedEmail } from '@/lib/email';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -65,6 +66,25 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     await student.save();
+
+    // Send email notification to student
+    const [studentUser, university] = await Promise.all([
+      User.findById(student.userId).lean<{ email: string; name: string }>(),
+      student.universityId ? University.findById(student.universityId).lean<{ name: string }>() : null,
+    ]);
+    const studentEmail = studentUser?.email || student.contactEmail;
+    const studentName = studentUser?.name || `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim() || 'Student';
+    const uniName = university?.name ?? 'your university';
+    if (studentEmail) {
+      sendStudentVerifiedEmail(
+        studentEmail,
+        studentName,
+        uniName,
+        action === 'verify' ? 'verified' : 'rejected',
+        reason
+      ).catch(() => {});
+    }
+
     return NextResponse.json({ success: true, data: student });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });

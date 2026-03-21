@@ -6,6 +6,7 @@ import Company from '@/models/Company';
 import User from '@/models/User';
 import { auth } from '@/lib/auth';
 import { generateId } from '@/lib/utils';
+import { sendConnectionRequestEmail } from '@/lib/email';
 
 export async function GET(_req: NextRequest) {
   try {
@@ -85,6 +86,31 @@ export async function POST(req: NextRequest) {
       message: message || '',
       status: 'pending',
     });
+
+    // Send email notification to recipient (non-blocking)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    const dashboardUrl = toType === 'student'
+      ? `${appUrl}/student/connections`
+      : `${appUrl}/company/connections`;
+
+    // Resolve sender display name
+    let fromName = session.user.name ?? 'Someone';
+    if (fromType === 'company' && fromProfileId) {
+      const co = await Company.findById(fromProfileId).lean<{ companyName: string }>();
+      if (co?.companyName) fromName = co.companyName;
+    } else if (fromType === 'student' && fromProfileId) {
+      const st = await Student.findById(fromProfileId).lean<{ displayName?: string; firstName?: string; lastName?: string }>();
+      if (st) fromName = st.displayName || `${st.firstName ?? ''} ${st.lastName ?? ''}`.trim() || fromName;
+    }
+
+    sendConnectionRequestEmail(
+      toUser.email,
+      toUser.name,
+      fromName,
+      fromType,
+      message || '',
+      dashboardUrl
+    ).catch(() => {});
 
     return NextResponse.json({ success: true, data: conn }, { status: 201 });
   } catch (error) {

@@ -6,7 +6,7 @@ import User from '@/models/User';
 import Company from '@/models/Company';
 import Role from '@/models/Role';
 import { auth } from '@/lib/auth';
-import { sendEmail } from '@/lib/email';
+import { sendClaimCredentialsEmail } from '@/lib/email';
 import { generateId, generateClaimToken, slugify } from '@/lib/utils';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
@@ -46,30 +46,32 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
 
     const session = await auth();
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-    const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'OJT Connect PH';
 
     let userId: string;
     let autoLoginUrl: string | null = null;
 
     if (session?.user) {
-      // Already logged in — just claim
+      console.log('[Claim] Already logged in as', session.user.userId);
       userId = session.user.userId;
     } else {
       const claimEmail = emailFromQuery || post.SectionData?.fbleads?.emails?.split(',')[0]?.trim() || '';
+      console.log('[Claim] claimEmail:', claimEmail);
       if (!claimEmail) return NextResponse.json({ success: false, error: 'No email found to create account' }, { status: 400 });
 
       let user = await User.findOne({ email: claimEmail.toLowerCase() });
-      let rawPassword: string;
+      console.log('[Claim] existing user:', user ? user._id : 'none');
 
       if (!user) {
-        // Create new user + company
-        rawPassword = generateClaimToken().slice(0, 12);
+        // New user — create account + company, send credentials email
+        const rawPassword = generateClaimToken().slice(0, 12);
         const companyRole = await Role.findOne({ roleName: 'company' });
         if (!companyRole) return NextResponse.json({ success: false, error: 'Company role not found' }, { status: 500 });
 
         const newUserId = generateId();
         const companyId = generateId();
         const companyName = post.SectionData?.fbleads?.name ?? claimEmail.split('@')[0];
+        const alToken = generateClaimToken();
+        const alExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
         await Company.create({
           _id: companyId,
@@ -93,30 +95,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
           profileRef: companyId,
           isActive: true,
           profileComplete: false,
+          autoLoginToken: alToken,
+          autoLoginTokenExpiry: alExpiry,
         });
 
-        // Auto-login URL with credentials in query params
-        autoLoginUrl = `${appUrl}/login?email=${encodeURIComponent(claimEmail)}&password=${encodeURIComponent(rawPassword)}`;
+        autoLoginUrl = `${appUrl}/api/auth/auto-login?token=${alToken}`;
 
-        // Send credentials email
-        const credentialsHtml = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#1a1a1a">
-          <h1 style="color:#0F6E56">${appName}</h1>
-          <h2>Welcome, ${companyName}!</h2>
-          <p>An account has been created for you on <strong>${appName}</strong> after you claimed your post.</p>
-          <div style="background:#f9fafb;border-radius:8px;padding:16px;margin:16px 0;font-size:14px">
-            <p style="margin:4px 0"><strong>Email:</strong> ${claimEmail}</p>
-            <p style="margin:4px 0"><strong>Password:</strong> ${rawPassword}</p>
-          </div>
-          <p>Click the button below to log in automatically:</p>
-          <div style="text-align:center;margin:32px 0">
-            <a href="${autoLoginUrl}" style="background:#0F6E56;color:#fff;padding:14px 28px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block">Login to My Account</a>
-          </div>
-          <p style="color:#6b7280;font-size:12px">You can also sign in manually at <a href="${appUrl}/login">${appUrl}/login</a> using the credentials above.</p>
-        </body></html>`;
-
-        await sendEmail(claimEmail, `Your ${appName} account credentials`, credentialsHtml, 'welcome', user._id, 'User');
+        // Send credentials email — awaited so errors surface in the catch block
+        try {
+          await sendClaimCredentialsEmail(claimEmail, companyName, rawPassword, autoLoginUrl);
+        } catch (emailErr) {
+          console.error('[Claim] Failed to send credentials email:', emailErr);
+        }
       } else {
-        // User exists — do NOT change password, just redirect to login page
+        // Existing user — do NOT change password, just pre-fill email on login page
         autoLoginUrl = `${appUrl}/login?email=${encodeURIComponent(claimEmail)}`;
       }
 

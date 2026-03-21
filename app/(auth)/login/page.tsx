@@ -99,10 +99,10 @@ export default function LoginPage() {
 
           <div className="mt-8 pt-6 border-t border-gray-100">
             <p className="text-xs text-center text-gray-400 mb-3">Demo credentials</p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {[['Admin', 'admin@ojtconnect.ph', 'Admin@123'], ['Student', 'juan@student.ph', 'Test@123'], ['Company', 'hr@techcorp.ph', 'Test@123'], ['University', 'upd@ojtconnect.ph', 'Test@123']].map(([role, email, pass]) => (
+            <div className="flex gap-2 text-xs">
+              {[['Student', 'juan@student.ph', 'Test@123'], ['Company', 'hr@techcorp.ph', 'Test@123'], ['University', 'upd@ojtconnect.ph', 'Test@123']].map(([role, email, pass]) => (
                 <button key={role} type="button" onClick={() => setForm({ email, password: pass })}
-                  className="text-left bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-2 transition-colors">
+                  className="flex-1 text-left bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-2 transition-colors">
                   <span className="font-medium text-gray-700">{role}</span><br />
                   <span className="text-gray-400 text-[10px]">{email}</span>
                 </button>

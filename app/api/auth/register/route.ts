@@ -7,6 +7,7 @@ import Student from '@/models/Student';
 import Company from '@/models/Company';
 import University from '@/models/University';
 import { generateId, slugify } from '@/lib/utils';
+import { sendWelcomeEmail } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   try {
@@ -64,6 +65,10 @@ export async function POST(req: NextRequest) {
       profileType: actualProfileType, profileRef,
       isActive: true, profileComplete: false,
     });
+
+    // Send welcome email (non-blocking)
+    const roleForEmail = profileType as 'student' | 'company' | 'university';
+    sendWelcomeEmail(email, name, roleForEmail).catch(() => {});
 
     return NextResponse.json({ success: true, message: 'Account created successfully' }, { status: 201 });
   } catch (error) {

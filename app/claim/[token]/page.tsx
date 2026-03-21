@@ -41,11 +41,7 @@ export default function ClaimPage() {
       const d = await res.json();
       if (d.success) {
         const url = d.data?.autoLoginUrl;
-        if (url) {
-          window.location.href = url;
-        } else {
-          router.push('/company/dashboard');
-        }
+        window.location.href = url ?? '/company/dashboard';
       } else {
         setState('error');
       }

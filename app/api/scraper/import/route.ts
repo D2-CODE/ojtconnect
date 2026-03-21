@@ -3,21 +3,7 @@ import connectDB from '@/lib/mongodb';
 import OjtWall from '@/models/OjtWall';
 import EmailLog from '@/models/EmailLog';
 import { generateId, generateClaimToken } from '@/lib/utils';
-import { sendEmail } from '@/lib/email';
-
-function claimInviteHtml(name: string, claimUrl: string): string {
-  const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'OJT Connect PH';
-  const expiryDays = process.env.CLAIM_TOKEN_EXPIRY_DAYS ?? 7;
-  return `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#1a1a1a">
-    <h1 style="color:#2563eb">${appName}</h1>
-    <h2>Hello, ${name}!</h2>
-    <p>We found your organization on ${appName}. Claim your profile to connect with OJT students.</p>
-    <div style="text-align:center;margin:32px 0">
-      <a href="${claimUrl}" style="background:#2563eb;color:#fff;padding:14px 28px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block">Claim Your Profile</a>
-    </div>
-    <p style="color:#6b7280;font-size:14px">This link expires in ${expiryDays} days. Ignore if unexpected.</p>
-  </body></html>`;
-}
+import { sendClaimInviteEmail } from '@/lib/email';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -130,7 +116,7 @@ export async function POST(req: NextRequest) {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const posterName = String(name ?? 'there');
-  const subject = `Claim your ${process.env.NEXT_PUBLIC_APP_NAME ?? 'OJT Connect PH'} profile`;
+  const postText = String(post_text ?? '');
 
   const emailResults = await Promise.allSettled(
     emails.map(async (email) => {
@@ -142,7 +128,7 @@ export async function POST(req: NextRequest) {
       });
       if (alreadySentToday) return false;
       const claimUrl = `${appUrl}/claim/${claimToken}?email=${encodeURIComponent(email)}`;
-      return sendEmail(email, subject, claimInviteHtml(posterName, claimUrl), 'claim_invite', doc._id, 'OjtWall');
+      return sendClaimInviteEmail(email, posterName, claimUrl, postText);
     })
   );
 
