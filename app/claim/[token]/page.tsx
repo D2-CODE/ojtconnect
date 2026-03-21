@@ -39,8 +39,12 @@ export default function ClaimPage() {
       const res = await fetch(`/api/claim/${token}${query}`, { method: 'POST' });
       const d = await res.json();
       if (d.success) {
-        // Redirect immediately — either auto-login or success state
-        window.location.href = d.data?.autoLoginUrl ?? '/company/dashboard';
+        const url = d.data?.autoLoginUrl;
+        if (url) {
+          window.location.href = url;
+        } else {
+          router.push('/company/dashboard');
+        }
       } else {
         setState('error');
       }

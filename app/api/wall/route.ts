@@ -103,12 +103,19 @@ export async function POST(req: NextRequest) {
     if (!title || !description) {
       return NextResponse.json({ success: false, error: 'Title and description are required' }, { status: 400 });
     }
+    // Use company name for display instead of user login name
+    let displayName = session.user.name;
+    if (role === 'company') {
+      const Company = (await import('@/models/Company')).default;
+      const company = await Company.findById(profileRef).lean<{ companyName?: string }>();
+      if (company?.companyName) displayName = company.companyName;
+    }
     const leadType = role === 'company' ? 'internship' : 'intern';
     const post = await OjtWall.create({
       _id: generateId(),
       source: role,
       postedBy: profileRef,
-      postedByName: session.user.name,
+      postedByName: displayName,
       title,
       description,
       skills: skills || [],
@@ -120,7 +127,7 @@ export async function POST(req: NextRequest) {
       deadline: deadline ? new Date(deadline) : undefined,
       SectionData: {
         fbleads: {
-          name: session.user.name,
+          name: displayName,
           post_text: description,
           skills: Array.isArray(skills) ? skills.join(', ') : (skills || ''),
           lead_type: leadType,

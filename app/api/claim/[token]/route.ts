@@ -116,12 +116,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
 
         await sendEmail(claimEmail, `Your ${appName} account credentials`, credentialsHtml, 'welcome', user._id, 'User');
       } else {
-        // User exists — reset to new temp password and return autoLoginUrl directly (no email)
-        rawPassword = generateClaimToken().slice(0, 12);
-        user.password = await bcrypt.hash(rawPassword, 10);
-        await user.save();
-
-        autoLoginUrl = `${appUrl}/login?email=${encodeURIComponent(claimEmail)}&password=${encodeURIComponent(rawPassword)}`;
+        // User exists — do NOT change password, just redirect to login page
+        autoLoginUrl = `${appUrl}/login?email=${encodeURIComponent(claimEmail)}`;
       }
 
       userId = user._id;

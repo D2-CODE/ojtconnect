@@ -28,13 +28,15 @@ export default function LoginPage() {
     }
   };
 
-  // Auto-login if email+password are in query params
+  // Pre-fill email from query params; auto-login if password also provided
   useEffect(() => {
     const email = searchParams.get('email');
     const password = searchParams.get('password');
     if (email && password) {
       setForm({ email, password });
       doSignIn(email, password);
+    } else if (email) {
+      setForm((f) => ({ ...f, email }));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
