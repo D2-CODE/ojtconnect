@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import { SkillTag } from '@/components/ui/SkillTag';
-import { Briefcase, Plus, Pencil, Trash2, Eye } from 'lucide-react';
+import { Briefcase, Plus, Pencil, Trash2, Eye, MapPin, Banknote, Users, Clock, CalendarClock } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
 
@@ -129,12 +129,12 @@ export default function CompanyWallPage() {
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     {(p.skills || []).slice(0, 5).map((s) => <SkillTag key={s} skill={s} />)}
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-gray-400">
-                    {p.slots && <span>{p.slots} slot{p.slots !== 1 ? 's' : ''}</span>}
-                    {p.location && <span>📍 {p.location}</span>}
-                    {p.allowance && <span>💰 {p.allowance}</span>}
-                    {p.deadline && <span>⏰ Deadline: {formatDate(p.deadline)}</span>}
-                    <span>Posted {formatDate(p.createdAt)}</span>
+                  <div className="flex items-center gap-4 text-xs text-gray-400 flex-wrap">
+                    {p.slots && <span className="flex items-center gap-1"><Users className="w-3 h-3" />{p.slots} slot{p.slots !== 1 ? 's' : ''}</span>}
+                    {p.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{p.location}</span>}
+                    {p.allowance && <span className="flex items-center gap-1"><Banknote className="w-3 h-3" />{p.allowance}</span>}
+                    {p.deadline && <span className="flex items-center gap-1"><CalendarClock className="w-3 h-3" />Deadline: {formatDate(p.deadline)}</span>}
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Posted {formatDate(p.createdAt)}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -152,7 +152,7 @@ export default function CompanyWallPage() {
 
       {/* Create / Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editPost ? 'Edit Listing' : 'New Internship Listing'} size="lg">
-        <div className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto pr-1">
+        <div className="flex flex-col gap-4">
           <Input label="Job Title" required value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="e.g. Web Development Intern" />
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Description <span className="text-red-500">*</span></label>
@@ -193,7 +193,7 @@ export default function CompanyWallPage() {
 
       {/* Delete confirm */}
       <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Remove Listing" size="sm">
-        <p className="text-sm text-gray-600 mb-5">This listing will be hidden from the wall. Are you sure?</p>
+        <p className="text-sm text-gray-500 mb-5">Are you sure you want to remove this listing? This cannot be undone.</p>
         <div className="flex gap-3 justify-end">
           <Button variant="outline" onClick={() => setDeleteId(null)}>Cancel</Button>
           <Button variant="danger" onClick={() => deleteId && handleDelete(deleteId)}>Remove</Button>

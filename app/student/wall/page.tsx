@@ -10,7 +10,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import { SkillTag } from '@/components/ui/SkillTag';
-import { GraduationCap, Plus, Pencil, Trash2, Eye, CheckCircle, Clock, XCircle, ArrowRight, AlertCircle } from 'lucide-react';
+import {
+  GraduationCap, Plus, Pencil, Trash2, Eye, CheckCircle,
+  Clock, XCircle, ArrowRight, AlertCircle, MapPin, Timer, Monitor,
+} from 'lucide-react';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
 
@@ -178,8 +181,6 @@ export default function StudentWallPage() {
     try {
       const hoursRequired = Number(form.hoursRequired);
       const payload = { ...form, hoursRequired };
-
-      // Fire wall save + profile sync in parallel
       const [wallRes] = await Promise.all([
         fetch(editPost ? `/api/wall/${editPost._id}` : '/api/wall', {
           method: editPost ? 'PATCH' : 'POST',
@@ -192,18 +193,15 @@ export default function StudentWallPage() {
           body: JSON.stringify({ skills: form.skills, preferredSetup: form.setup, preferredLocation: form.location, ojtHoursRequired: hoursRequired, bio: form.description }),
         }),
       ]);
-
       const d = await wallRes.json();
       if (d.success) {
         showToast(editPost ? 'Post updated!' : 'Post created!', 'success');
         setModalOpen(false);
-        // Update state directly from returned doc — no extra fetch needed
         if (editPost) {
           setPosts((prev) => prev.map((p) => p._id === editPost._id ? d.data : p));
         } else {
           setPosts((prev) => [d.data, ...prev]);
         }
-        // Sync profile state locally
         setProfile((prev) => prev ? { ...prev, skills: form.skills, preferredSetup: form.setup, preferredLocation: form.location, ojtHoursRequired: hoursRequired, bio: form.description } : prev);
       } else {
         showToast(d.error || 'Failed', 'error');
@@ -260,7 +258,7 @@ export default function StudentWallPage() {
               {posts.map((p) => {
                 const { title, description, skills, setup, location, hoursRequired } = resolvePost(p);
                 return (
-                  <div key={p._id} className="bg-white rounded-2xl border border-gray-200 p-5">
+                  <div key={p._id} className="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-sm transition-shadow">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -268,17 +266,17 @@ export default function StudentWallPage() {
                           <Badge label="Active" variant="success" />
                           {setup && <Badge label={setup} variant="neutral" />}
                         </div>
-                        <p className="text-sm text-gray-500 line-clamp-2 mb-2">{description}</p>
-                        <div className="flex flex-wrap gap-1.5 mb-2">
+                        <p className="text-sm text-gray-500 line-clamp-2 mb-3">{description}</p>
+                        <div className="flex flex-wrap gap-1.5 mb-3">
                           {skills.slice(0, 5).map((s) => <SkillTag key={s} skill={s} />)}
                         </div>
                         <div className="flex items-center gap-4 text-xs text-gray-400">
-                          {location && <span>📍 {location}</span>}
-                          {hoursRequired > 0 && <span>⏱ {hoursRequired} hrs</span>}
-                          <span>Posted {formatDate(p.createdAt)}</span>
+                          {location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{location}</span>}
+                          {hoursRequired > 0 && <span className="flex items-center gap-1"><Timer className="w-3 h-3" />{hoursRequired} hrs</span>}
+                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Posted {formatDate(p.createdAt)}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         <Link href={`/wall/${p._id}`} target="_blank">
                           <Button variant="ghost" className="p-2 h-auto"><Eye className="w-4 h-4" /></Button>
                         </Link>
@@ -294,13 +292,19 @@ export default function StudentWallPage() {
         </>
       )}
 
+      {/* Create / Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editPost ? 'Edit Post' : 'Post OJT Availability'} size="lg">
-        <div className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto pr-1">
+        <div className="flex flex-col gap-4">
           <Input label="Post Title" required value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="e.g. Looking for IT OJT — BS Computer Science" />
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">About You / What You&apos;re Looking For <span className="text-red-500">*</span></label>
-            <textarea className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F6E56] resize-none" rows={4}
-              value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Describe yourself, your skills, and what kind of internship you're looking for..." />
+            <textarea
+              className="w-full border border-gray-300 rounded-[10px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F6E56]/20 focus:border-[#0F6E56] resize-none transition-all"
+              rows={4}
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              placeholder="Describe yourself, your skills, and what kind of internship you're looking for..."
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Select label="Preferred Setup" value={form.setup} onChange={(e) => setForm((f) => ({ ...f, setup: e.target.value }))} options={SETUP_OPTIONS} placeholder="Any setup" />
@@ -313,22 +317,26 @@ export default function StudentWallPage() {
               {form.skills.map((s) => <SkillTag key={s} skill={s} onRemove={() => setForm((f) => ({ ...f, skills: f.skills.filter((x) => x !== s) }))} />)}
             </div>
             <div className="flex gap-2">
-              <input className="flex-1 border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F6E56]"
-                value={skillInput} onChange={(e) => setSkillInput(e.target.value)}
+              <input
+                className="flex-1 border border-gray-300 rounded-[10px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F6E56]/20 focus:border-[#0F6E56] transition-all"
+                value={skillInput}
+                onChange={(e) => setSkillInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                placeholder="Add a skill (press Enter)" />
+                placeholder="Add a skill (press Enter)"
+              />
               <Button type="button" variant="outline" onClick={addSkill}>Add</Button>
             </div>
           </div>
-        </div>
-        <div className="flex gap-3 justify-end mt-5 pt-4 border-t border-gray-100">
-          <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
-          <Button onClick={handleSave} loading={saving}>{editPost ? 'Save Changes' : 'Post Now'}</Button>
+          <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
+            <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleSave} loading={saving}>{editPost ? 'Save Changes' : 'Post Now'}</Button>
+          </div>
         </div>
       </Modal>
 
+      {/* Delete confirm */}
       <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Remove Post" size="sm">
-        <p className="text-sm text-gray-600 mb-5">Are you sure you want to remove this post?</p>
+        <p className="text-sm text-gray-500 mb-5">Are you sure you want to remove this post? This cannot be undone.</p>
         <div className="flex gap-3 justify-end">
           <Button variant="outline" onClick={() => setDeleteId(null)}>Cancel</Button>
           <Button variant="danger" onClick={() => deleteId && handleDelete(deleteId)}>Remove</Button>

@@ -2,8 +2,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { GraduationCap, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { GraduationCap, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 interface ClaimData {
   postId: string;
@@ -65,9 +66,9 @@ export default function ClaimPage() {
           </div>
 
           {state === 'loading' && (
-            <div className="text-center py-8">
-              <Loader2 className="w-10 h-10 text-[#0F6E56] animate-spin mx-auto mb-4" />
-              <p className="text-gray-500">Validating your claim link…</p>
+            <div className="flex flex-col items-center justify-center py-10 gap-4">
+              <LoadingSpinner size="lg" />
+              <p className="text-sm text-gray-500">Validating your claim link…</p>
             </div>
           )}
 
