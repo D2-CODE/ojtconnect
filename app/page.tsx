@@ -3,12 +3,21 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { UniversityCard } from '@/components/cards/UniversityCard';
 import { GraduationCap, Building2, University, ArrowRight, Search, CheckCircle, Users, Briefcase } from 'lucide-react';
+import connectDB from '@/lib/mongodb';
+import UniversityModel from '@/models/University';
 
-const FEATURED_UNIVERSITIES = [
-  { _id: '1773656953241301', name: 'University of the Philippines Diliman', location: 'Quezon City, Metro Manila', verificationStatus: 'verified' as const, programs: ['BS Computer Science', 'BS Information Technology', 'BS Electronics Engineering', 'BA Economics'], _studentCount: 1 },
-  { _id: '1773656953241302', name: 'Polytechnic University of the Philippines', location: 'Sta. Mesa, Manila', verificationStatus: 'pending' as const, programs: ['BS Computer Engineering', 'BS Information Technology', 'BS Industrial Engineering'], _studentCount: 1 },
-  { _id: '1773656953241303', name: 'De La Salle University', location: 'Malate, Manila', verificationStatus: 'verified' as const, programs: ['BS Computer Science', 'BS Information Systems', 'BS Management of Financial Institutions'], _studentCount: 0 },
-];
+async function getFeaturedUniversities() {
+  try {
+    await connectDB();
+    return await UniversityModel
+      .find({ verificationStatus: 'verified', isActive: true })
+      .sort({ studentCount: -1, createdAt: -1 })
+      .limit(3)
+      .lean();
+  } catch {
+    return [];
+  }
+}
 
 const STEPS = [
   { icon: GraduationCap, title: 'Create your account', desc: 'Sign up as a student, company, or university admin for free.' },
@@ -24,7 +33,8 @@ const STATS = [
   { value: '100%', label: 'Free' },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const featuredUniversities = await getFeaturedUniversities();
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -124,10 +134,10 @@ export default function HomePage() {
               <h2 className="text-3xl font-bold text-gray-900 mb-2">Partner Universities</h2>
               <p className="text-gray-500">Verified institutions that trust OJT Connect PH.</p>
             </div>
-            <Link href="/wall" className="text-sm font-semibold text-[#0F6E56] hover:underline hidden sm:block">View all →</Link>
+            <Link href="/universities" className="text-sm font-semibold text-[#0F6E56] hover:underline hidden sm:block">View all →</Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {FEATURED_UNIVERSITIES.map((uni) => (
+            {featuredUniversities.map((uni) => (
               <UniversityCard key={uni._id} university={uni as never} />
             ))}
           </div>

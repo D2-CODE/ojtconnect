@@ -36,7 +36,7 @@ export default async function UniversityPage({ params }: { params: Promise<{ slu
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-bold text-gray-900 mb-2">University not found</h2>
-            <Link href="/wall"><Button variant="primary">Back to Wall</Button></Link>
+            <Link href="/universities"><Button variant="primary">Back to Universities</Button></Link>
           </div>
         </div>
         <Footer />
@@ -50,8 +50,8 @@ export default async function UniversityPage({ params }: { params: Promise<{ slu
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
       <div className="flex-1 max-w-[1440px] mx-auto w-full px-5 lg:px-20 py-8">
-        <Link href="/wall" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-6 transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back
+        <Link href="/universities" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-6 transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back to Universities
         </Link>
 
         {/* Header */}

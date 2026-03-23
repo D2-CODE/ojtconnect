@@ -4,6 +4,7 @@ import connectDB from '@/lib/mongodb';
 import OjtWall from '@/models/OjtWall';
 import User from '@/models/User';
 import Company from '@/models/Company';
+import Student from '@/models/Student';
 import Role from '@/models/Role';
 import { auth } from '@/lib/auth';
 import { sendClaimCredentialsEmail } from '@/lib/email';
@@ -27,6 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
         postName: post.SectionData?.fbleads?.name ?? 'Unknown',
         email: emailFromQuery || post.SectionData?.fbleads?.emails?.split(',')[0]?.trim() || '',
         postText: post.SectionData?.fbleads?.post_text ?? '',
+        leadType: post.SectionData?.fbleads?.lead_type ?? 'internship',
       },
     });
   } catch (error) {
@@ -47,78 +49,128 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     const session = await auth();
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
+    const leadType = post.SectionData?.fbleads?.lead_type ?? 'internship';
+    const isStudent = leadType === 'intern';
+
     let userId: string;
+    let profileId: string | null = null;
     let autoLoginUrl: string | null = null;
 
     if (session?.user) {
       console.log('[Claim] Already logged in as', session.user.userId);
       userId = session.user.userId;
+      profileId = session.user.profileRef ?? null;
     } else {
       const claimEmail = emailFromQuery || post.SectionData?.fbleads?.emails?.split(',')[0]?.trim() || '';
-      console.log('[Claim] claimEmail:', claimEmail);
+      console.log('[Claim] claimEmail:', claimEmail, '| leadType:', leadType);
       if (!claimEmail) return NextResponse.json({ success: false, error: 'No email found to create account' }, { status: 400 });
 
       let user = await User.findOne({ email: claimEmail.toLowerCase() });
       console.log('[Claim] existing user:', user ? user._id : 'none');
 
       if (!user) {
-        // New user — create account + company, send credentials email
         const rawPassword = generateClaimToken().slice(0, 12);
-        const companyRole = await Role.findOne({ roleName: 'company' });
-        if (!companyRole) return NextResponse.json({ success: false, error: 'Company role not found' }, { status: 500 });
-
-        const newUserId = generateId();
-        const companyId = generateId();
-        const companyName = post.SectionData?.fbleads?.name ?? claimEmail.split('@')[0];
         const alToken = generateClaimToken();
-        const alExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        const alExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        const newUserId = generateId();
+        const displayName = post.SectionData?.fbleads?.name ?? claimEmail.split('@')[0];
 
-        await Company.create({
-          _id: companyId,
-          userId: newUserId,
-          companyName,
-          slug: slugify(companyName) + '-' + companyId.slice(-4),
-          email: claimEmail,
-          isVerified: false,
-          isVisible: true,
-          internSlotsOpen: 0,
-          acceptsMOA: true,
-        });
+        if (isStudent) {
+          // --- Student claim ---
+          const studentRole = await Role.findOne({ roleName: 'student' });
+          if (!studentRole) return NextResponse.json({ success: false, error: 'Student role not found' }, { status: 500 });
 
-        user = await User.create({
-          _id: newUserId,
-          name: companyName,
-          email: claimEmail.toLowerCase(),
-          password: await bcrypt.hash(rawPassword, 10),
-          role: companyRole._id,
-          profileType: 'company',
-          profileRef: companyId,
-          isActive: true,
-          profileComplete: false,
-          autoLoginToken: alToken,
-          autoLoginTokenExpiry: alExpiry,
-        });
+          const studentId = generateId();
+          const nameParts = displayName.split(' ');
 
-        autoLoginUrl = `${appUrl}/api/auth/auto-login?token=${alToken}`;
+          await Student.create({
+            _id: studentId,
+            userId: newUserId,
+            firstName: nameParts[0] ?? displayName,
+            lastName: nameParts.slice(1).join(' ') || '',
+            displayName,
+            contactEmail: claimEmail,
+            skills: post.SectionData?.fbleads?.skills
+              ? post.SectionData.fbleads.skills.split(',').map((s: string) => s.trim()).filter(Boolean)
+              : [],
+            ojtHoursRequired: 300,
+            isVisible: true,
+          });
 
-        // Send credentials email — awaited so errors surface in the catch block
+          user = await User.create({
+            _id: newUserId,
+            name: displayName,
+            email: claimEmail.toLowerCase(),
+            password: await bcrypt.hash(rawPassword, 10),
+            role: studentRole._id,
+            profileType: 'student',
+            profileRef: studentId,
+            isActive: true,
+            profileComplete: false,
+            autoLoginToken: alToken,
+            autoLoginTokenExpiry: alExpiry,
+          });
+
+          profileId = studentId;
+          autoLoginUrl = `${appUrl}/api/auth/auto-login?token=${alToken}`;
+        } else {
+          // --- Company claim ---
+          const companyRole = await Role.findOne({ roleName: 'company' });
+          if (!companyRole) return NextResponse.json({ success: false, error: 'Company role not found' }, { status: 500 });
+
+          const companyId = generateId();
+
+          await Company.create({
+            _id: companyId,
+            userId: newUserId,
+            companyName: displayName,
+            slug: slugify(displayName) + '-' + companyId.slice(-4),
+            email: claimEmail,
+            isVerified: false,
+            isVisible: true,
+            internSlotsOpen: 0,
+            acceptsMOA: true,
+          });
+
+          user = await User.create({
+            _id: newUserId,
+            name: displayName,
+            email: claimEmail.toLowerCase(),
+            password: await bcrypt.hash(rawPassword, 10),
+            role: companyRole._id,
+            profileType: 'company',
+            profileRef: companyId,
+            isActive: true,
+            profileComplete: false,
+            autoLoginToken: alToken,
+            autoLoginTokenExpiry: alExpiry,
+          });
+
+          profileId = companyId;
+          autoLoginUrl = `${appUrl}/api/auth/auto-login?token=${alToken}`;
+        }
+
         try {
-          await sendClaimCredentialsEmail(claimEmail, companyName, rawPassword, autoLoginUrl);
+          await sendClaimCredentialsEmail(claimEmail, displayName, rawPassword, autoLoginUrl);
         } catch (emailErr) {
           console.error('[Claim] Failed to send credentials email:', emailErr);
         }
       } else {
-        // Existing user — do NOT change password, just pre-fill email on login page
         autoLoginUrl = `${appUrl}/login?email=${encodeURIComponent(claimEmail)}`;
       }
 
       userId = user._id;
     }
 
-    // Mark post as claimed
+    // Mark post as claimed + stamp ownership so edit/delete works
     post.status = 'claimed';
     post.claimedBy = userId;
     post.claimedAt = new Date();
+    if (profileId) {
+      post.postedBy = profileId;
+      post.postedByName = post.SectionData?.fbleads?.name ?? '';
+      post.source = isStudent ? 'student' : 'company';
+    }
     await post.save();
 
     return NextResponse.json({

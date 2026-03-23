@@ -99,9 +99,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
           <aside className="w-72 flex-shrink-0 flex flex-col gap-4">
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <h3 className="font-semibold text-gray-900 mb-4">Contact Information</h3>
-              {isNativePost ? (
-                <p className="text-sm text-gray-500">Sign in and connect to get contact details.</p>
-              ) : (
+              {fb?.emails || fb?.phones ? (
                 <>
                   {fb?.emails && (
                     <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
@@ -115,8 +113,9 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                       <span>{fb.phones}</span>
                     </div>
                   )}
-                  {!fb?.emails && !fb?.phones && <p className="text-sm text-gray-400">No contact info available.</p>}
                 </>
+              ) : (
+                <p className="text-sm text-gray-500">Sign in and connect to get contact details.</p>
               )}
             </div>
 
