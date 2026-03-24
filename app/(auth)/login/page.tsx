@@ -21,7 +21,18 @@ function LoginForm() {
     try {
       const result = await signIn('credentials', { email, password, redirect: false });
       if (result?.error) { setError('Invalid email or password.'); return; }
-      router.push('/student/dashboard');
+      const callbackUrl = searchParams.get('callbackUrl');
+      if (callbackUrl) { router.push(callbackUrl); router.refresh(); return; }
+      // Fetch session to get role for redirect
+      const sessionRes = await fetch('/api/auth/session');
+      const session = await sessionRes.json();
+      const role = session?.user?.roleName;
+      const dashboard =
+        role === 'company' ? '/company/dashboard' :
+        role === 'university_admin' ? '/university-admin/dashboard' :
+        role === 'super_admin' ? '/admin/dashboard' :
+        '/student/dashboard';
+      router.push(dashboard);
       router.refresh();
     } finally {
       setLoading(false);
