@@ -21,19 +21,24 @@ function LoginForm() {
     try {
       const result = await signIn('credentials', { email, password, redirect: false });
       if (result?.error) { setError('Invalid email or password.'); return; }
-      const callbackUrl = searchParams.get('callbackUrl');
-      if (callbackUrl) { router.push(callbackUrl); router.refresh(); return; }
-      // Fetch session to get role for redirect
-      const sessionRes = await fetch('/api/auth/session');
-      const session = await sessionRes.json();
-      const role = session?.user?.roleName;
-      const dashboard =
+      // Poll session until role is available (max 3s)
+      let role = '';
+      for (let i = 0; i < 6; i++) {
+        const sessionRes = await fetch('/api/auth/session');
+        const session = await sessionRes.json();
+        role = session?.user?.roleName ?? '';
+        if (role) break;
+        await new Promise((r) => setTimeout(r, 500));
+      }
+      const roleHome =
         role === 'company' ? '/company/dashboard' :
         role === 'university_admin' ? '/university-admin/dashboard' :
         role === 'super_admin' ? '/admin/dashboard' :
         '/student/dashboard';
-      router.push(dashboard);
-      router.refresh();
+      const raw = searchParams.get('callbackUrl') ?? '';
+      const decoded = raw ? decodeURIComponent(raw) : '';
+      const destination = (decoded && decoded.startsWith('/' + roleHome.split('/')[1])) ? decoded : roleHome;
+      window.location.href = destination;
     } finally {
       setLoading(false);
     }
