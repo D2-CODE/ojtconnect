@@ -50,8 +50,9 @@ function truncate(text: string, max = 180): string {
 }
 
 export function PostCard({ post }: PostCardProps) {
-  const isNativePost = post.source === 'company' || post.source === 'student';
   const fb = post.SectionData?.fbleads;
+  // Native = posted directly from dashboard (no scraped fbleads name)
+  const isNativePost = (post.source === 'company' || post.source === 'student') && !fb?.name;
 
   if (isNativePost) {
     const skills = post.skills || [];

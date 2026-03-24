@@ -33,7 +33,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
   }
 
   const fb = post.SectionData?.fbleads;
-  const isNativePost = post.source === 'company' || post.source === 'student';
+  const isNativePost = (post.source === 'company' || post.source === 'student') && !fb?.name;
   const skills = isNativePost
     ? (post.skills || [])
     : (fb?.skills ? fb.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : []);

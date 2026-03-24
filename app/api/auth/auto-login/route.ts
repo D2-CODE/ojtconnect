@@ -4,10 +4,10 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import Role from '@/models/Role';
 
-const COOKIE_NAME =
-  process.env.NEXTAUTH_URL?.startsWith('https')
-    ? '__Secure-authjs.session-token'
-    : 'authjs.session-token';
+const IS_HTTPS = process.env.NEXTAUTH_URL?.startsWith('https') ?? false;
+const COOKIE_NAME = IS_HTTPS ? '__Secure-authjs.session-token' : 'authjs.session-token';
+// Auth.js v5 uses the cookie name as the salt for JWT encoding
+const JWT_SALT = COOKIE_NAME;
 
 export async function GET(req: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
         exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
       },
       secret: process.env.NEXTAUTH_SECRET!,
-      salt: COOKIE_NAME,
+      salt: JWT_SALT,
     });
 
     const dashboardMap: Record<string, string> = {
@@ -60,10 +60,12 @@ export async function GET(req: NextRequest) {
       super_admin: '/admin/dashboard',
     };
 
+    console.log('[AutoLogin] roleName:', roleName, '→', dashboardMap[roleName]);
+
     const res = NextResponse.redirect(`${appUrl}${dashboardMap[roleName] ?? '/company/dashboard'}`);
     res.cookies.set(COOKIE_NAME, jwt, {
       httpOnly: true,
-      secure: process.env.NEXTAUTH_URL?.startsWith('https') ?? false,
+      secure: IS_HTTPS,
       sameSite: 'lax',
       path: '/',
       maxAge: 30 * 24 * 60 * 60,

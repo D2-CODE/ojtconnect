@@ -46,9 +46,11 @@ export async function GET(req: NextRequest) {
       if (postedBy) query.postedBy = postedBy;
       if (source) query.source = source;
       if (type === 'intern' || type === 'internship') {
-        if (source !== 'company' && source !== 'student') {
-          query['SectionData.fbleads.lead_type'] = type;
-        }
+        const nativeSource = type === 'intern' ? 'student' : 'company';
+        query['$or'] = [
+          { 'SectionData.fbleads.lead_type': type, 'SectionData.fbleads.name': { $exists: true } },
+          { source: nativeSource, 'SectionData.fbleads.name': { $exists: false } },
+        ];
       }
       if (status && status !== 'all') query.status = status;
     }

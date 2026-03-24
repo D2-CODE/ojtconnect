@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { Avatar } from '@/components/ui/Avatar';
 import { SkillTag } from '@/components/ui/SkillTag';
 import { Badge } from '@/components/ui/Badge';
@@ -24,9 +25,10 @@ interface StudentCardProps {
   student: StudentCardStudent;
   onConnect?: (id: string) => void;
   connectionStatus?: 'pending' | 'accepted' | 'rejected' | null;
+  profileBasePath?: string;
 }
 
-export function StudentCard({ student, onConnect, connectionStatus }: StudentCardProps) {
+export function StudentCard({ student, onConnect, connectionStatus, profileBasePath = '/company/students' }: StudentCardProps) {
   const name = student.displayName || `${student.firstName || ''} ${student.lastName || ''}`.trim() || 'Student';
   const skills = (student.skills || []).slice(0, 4);
   const isVerified = student.universityVerificationStatus === 'verified';
@@ -66,12 +68,15 @@ export function StudentCard({ student, onConnect, connectionStatus }: StudentCar
             <span>⏳</span> Request Sent
           </div>
         )}
-        {!connectionStatus && onConnect && (
+          {!connectionStatus && onConnect && (
           <Button variant="outline" className="w-full" onClick={() => onConnect(student._id)}>
             Connect
           </Button>
         )}
       </div>
+      <Link href={`${profileBasePath}/${student._id}`} className="w-full block text-center text-xs text-[#0F6E56] hover:underline mt-1">
+        View Profile
+      </Link>
     </div>
   );
 }

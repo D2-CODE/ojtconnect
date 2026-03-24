@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import { Users, GraduationCap } from 'lucide-react';
+import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
 
 interface Connection {
@@ -78,7 +79,7 @@ export default function CompanyConnectionsPage() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-medium text-gray-900 text-sm">{c.toName}</span>
+                        <Link href={`/company/students/${c.toProfileId}`} className="font-medium text-gray-900 text-sm hover:text-[#0F6E56] hover:underline">{c.toName}</Link>
                         <Badge label="Accepted" variant="success" />
                       </div>
                       {c.message && <p className="text-xs text-gray-500">&ldquo;{c.message}&rdquo;</p>}
