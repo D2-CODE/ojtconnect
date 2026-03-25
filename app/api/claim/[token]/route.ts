@@ -128,8 +128,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
             email: claimEmail,
             isVerified: false,
             isVisible: true,
-            internSlotsOpen: 0,
-            acceptsMOA: true,
           });
 
           user = await User.create({
