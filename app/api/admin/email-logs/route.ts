@@ -16,6 +16,8 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status');
     const query: Record<string, unknown> = {};
     if (status) query.status = status;
+    const search = searchParams.get('search');
+    if (search) query['$or'] = [{ to: { $regex: search, $options: 'i' } }, { subject: { $regex: search, $options: 'i' } }];
     const skip = (page - 1) * limit;
     const [logs, total] = await Promise.all([
       EmailLog.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),

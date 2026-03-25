@@ -19,7 +19,7 @@ interface UserItem {
   createdAt: string;
 }
 
-const TABS = [{ value: 'all', label: 'All' }, { value: 'student', label: 'Students' }, { value: 'company', label: 'Companies' }, { value: 'university', label: 'Universities' }];
+const TABS = [{ value: 'all', label: 'All' }, { value: 'student', label: 'Students' }, { value: 'company', label: 'Companies' }, { value: 'university_admin', label: 'Universities' }];
 
 export default function AdminUsersPage() {
   const { toast: showToast } = useToast();

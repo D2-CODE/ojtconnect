@@ -1,53 +1,32 @@
 import { NextResponse } from 'next/server';
 import { seedDatabase } from '@/lib/seed';
+import connectDB from '@/lib/mongodb';
+import Role from '@/models/Role';
+import User from '@/models/User';
+import Student from '@/models/Student';
+import Company from '@/models/Company';
+import University from '@/models/University';
 
 export async function POST() {
-  // Block in production unless explicitly allowed
-  if (process.env.NODE_ENV === 'production' && process.env.SEED_DUMMY_DATA !== 'true') {
-    return NextResponse.json({ success: false, error: 'Seeding not allowed in production' }, { status: 403 });
-  }
   try {
-    console.log('[api/seed] Seed endpoint called');
     await seedDatabase();
-    console.log('[api/seed] Seed completed');
-    return NextResponse.json({ success: true, message: 'Database seeded successfully' });
+    return NextResponse.json({ success: true, message: 'Seeded successfully' });
   } catch (error) {
-    console.error('[api/seed] Seed failed:', error);
-    return NextResponse.json(
-      { success: false, error: String(error), stack: error instanceof Error ? error.stack : undefined },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }
 }
 
-// GET — diagnostic: check what's in the DB right now
 export async function GET() {
   try {
-    const connectDB = (await import('@/lib/mongodb')).default;
-    const Role = (await import('@/models/Role')).default;
-    const User = (await import('@/models/User')).default;
-    const Student = (await import('@/models/Student')).default;
-    const Company = (await import('@/models/Company')).default;
-    const University = (await import('@/models/University')).default;
-    const OjtWall = (await import('@/models/OjtWall')).default;
-
     await connectDB();
-
-    const [roles, users, students, companies, universities, wallPosts] = await Promise.all([
+    const [roles, users, students, companies, universities] = await Promise.all([
       Role.countDocuments(),
       User.countDocuments(),
       Student.countDocuments(),
       Company.countDocuments(),
       University.countDocuments(),
-      OjtWall.countDocuments(),
     ]);
-
-    return NextResponse.json({
-      success: true,
-      data: { roles, users, students, companies, universities, wallPosts },
-      seeded: roles > 0,
-      SEED_DUMMY_DATA: process.env.SEED_DUMMY_DATA,
-    });
+    return NextResponse.json({ success: true, data: { roles, users, students, companies, universities }, seeded: roles > 0 });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }

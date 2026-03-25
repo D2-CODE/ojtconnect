@@ -30,7 +30,7 @@ export default function AdminEmailLogsPage() {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (search) params.set('search', search);
     fetch(`/api/admin/email-logs?${params}`).then((r) => r.json()).then((d) => {
-      if (d.success) { setLogs(d.data); setTotal(d.total || 0); }
+      if (d.success) { setLogs(d.data); setTotal(d.meta?.total || 0); }
     }).finally(() => setLoading(false));
   }, [page, search]);
 
