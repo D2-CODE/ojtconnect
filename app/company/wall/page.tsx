@@ -36,6 +36,7 @@ interface Post {
   SectionData?: {
     fbleads?: {
       name?: string;
+      fb_id?: string;
       post_text?: string;
       skills?: string;
       lead_type?: string;
@@ -73,7 +74,7 @@ export default function CompanyWallPage() {
   // Normalize scraped post fields for display and editing
   const normalize = (p: Post) => {
     const fb = p.SectionData?.fbleads;
-    const isScraped = !!fb?.name;
+    const isScraped = p.source === 'scraped';
     return {
       title: p.title || fb?.name || '',
       description: p.description || fb?.post_text || '',
@@ -152,9 +153,10 @@ export default function CompanyWallPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <h3 className="font-semibold text-gray-900">{n.title || 'Untitled'}</h3>
-                    <Badge label={p.status === 'hidden' ? 'Hidden' : p.status === 'claimed' ? 'Claimed' : 'Active'} variant={p.status === 'hidden' ? 'neutral' : 'success'} />
+                    <Badge label={p.status === 'hidden' ? 'Hidden' : p.status === 'claimed' ? 'Claimed' : 'Active'} variant={p.status === 'hidden' ? 'neutral' : p.status === 'claimed' ? 'success' : 'success'} />
                     {n.setup && <Badge label={n.setup} variant="neutral" />}
                     {n.isScraped && <Badge label="From Scraper" variant="warning" />}
+                    {!n.isScraped && p.status === 'claimed' && <Badge label="Claimed by Student" variant="primary" />}
                   </div>
                   <p className="text-sm text-gray-500 line-clamp-2 mb-2">{n.description}</p>
                   <div className="flex flex-wrap gap-1.5 mb-2">

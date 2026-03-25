@@ -5,14 +5,30 @@ import { Avatar } from '@/components/ui/Avatar';
 import { SkillTag } from '@/components/ui/SkillTag';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { ArrowLeft, Mail, Phone, Calendar, Building2, MapPin, Users, Banknote, Clock, AlarmClock } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Globe, Calendar, Building2, MapPin, Users, Banknote, Clock, AlarmClock } from 'lucide-react';
+
+import connectDB from '@/lib/mongodb';
+import OjtWall from '@/models/OjtWall';
+import Company from '@/models/Company';
+import Student from '@/models/Student';
 
 async function getPost(id: string) {
   try {
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/wall/${id}`, { cache: 'no-store' });
-    const data = await res.json();
-    return data.success ? data.data : null;
+    await connectDB();
+    const post = await OjtWall.findById(id).lean();
+    if (!post) return null;
+
+    let contact: { email?: string; phone?: string; website?: string } | null = null;
+    if ((post.source === 'company' || post.source === 'student') && post.postedBy) {
+      if (post.source === 'company') {
+        const company = await Company.findById(post.postedBy).lean<{ email?: string; phone?: string; website?: string }>();
+        if (company) contact = { email: company.email, phone: company.phone, website: company.website };
+      } else {
+        const student = await Student.findById(post.postedBy).lean<{ contactEmail?: string; linkedinUrl?: string; portfolioUrl?: string }>();
+        if (student) contact = { email: student.contactEmail, website: student.linkedinUrl || student.portfolioUrl };
+      }
+    }
+    return { ...post, contact };
   } catch { return null; }
 }
 
@@ -33,14 +49,14 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
   }
 
   const fb = post.SectionData?.fbleads;
-  const isNativePost = (post.source === 'company' || post.source === 'student') && !fb?.name;
+  const isNativePost = (post.source === 'company' || post.source === 'student') && !fb?.fb_id;
   const skills = isNativePost
     ? (post.skills || [])
     : (fb?.skills ? fb.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : []);
   const isIntern = isNativePost ? post.source === 'student' : fb?.lead_type === 'intern';
   const displayName = isNativePost ? post.postedByName : fb?.name;
   const postText = isNativePost ? post.description : fb?.post_text;
-  const dateStr = post.createdAt?.$date || post.createdAt;
+  const dateStr = post.createdAt instanceof Date ? post.createdAt.toISOString() : String(post.createdAt ?? '');
   const date = dateStr ? new Date(dateStr).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 
   return (
@@ -99,23 +115,50 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
           <aside className="w-72 flex-shrink-0 flex flex-col gap-4">
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <h3 className="font-semibold text-gray-900 mb-4">Contact Information</h3>
-              {fb?.emails || fb?.phones ? (
-                <>
-                  {fb?.emails && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                      <Mail className="w-4 h-4 text-[#0F6E56]" />
-                      <a href={`mailto:${fb.emails}`} className="hover:text-[#0F6E56] break-all">{fb.emails}</a>
-                    </div>
-                  )}
-                  {fb?.phones && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Phone className="w-4 h-4 text-[#0F6E56]" />
-                      <span>{fb.phones}</span>
-                    </div>
-                  )}
-                </>
+              {isNativePost ? (
+                post.contact?.email || post.contact?.phone || post.contact?.website ? (
+                  <div className="flex flex-col gap-2">
+                    {post.contact.email && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Mail className="w-4 h-4 text-[#0F6E56]" />
+                        <a href={`mailto:${post.contact.email}`} className="hover:text-[#0F6E56] break-all">{post.contact.email}</a>
+                      </div>
+                    )}
+                    {post.contact.phone && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Phone className="w-4 h-4 text-[#0F6E56]" />
+                        <span>{post.contact.phone}</span>
+                      </div>
+                    )}
+                    {post.contact.website && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Globe className="w-4 h-4 text-[#0F6E56]" />
+                        <a href={post.contact.website} target="_blank" rel="noopener noreferrer" className="hover:text-[#0F6E56] break-all">{post.contact.website}</a>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No contact details available.</p>
+                )
               ) : (
-                <p className="text-sm text-gray-500">Sign in and connect to get contact details.</p>
+                fb?.emails || fb?.phones ? (
+                  <>
+                    {fb?.emails && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                        <Mail className="w-4 h-4 text-[#0F6E56]" />
+                        <a href={`mailto:${fb.emails}`} className="hover:text-[#0F6E56] break-all">{fb.emails}</a>
+                      </div>
+                    )}
+                    {fb?.phones && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Phone className="w-4 h-4 text-[#0F6E56]" />
+                        <span>{fb.phones}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-500">Sign in and connect to get contact details.</p>
+                )
               )}
             </div>
 

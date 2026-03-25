@@ -8,6 +8,7 @@ import { Calendar, MapPin, Users, Banknote, Monitor, CheckCircle2, Clock } from 
 
 interface FbLead {
   name?: string;
+  fb_id?: string;
   profile_pic?: string;
   post_text?: string;
   emails?: string;
@@ -51,8 +52,8 @@ function truncate(text: string, max = 180): string {
 
 export function PostCard({ post }: PostCardProps) {
   const fb = post.SectionData?.fbleads;
-  // Native = posted directly from dashboard (no scraped fbleads name)
-  const isNativePost = (post.source === 'company' || post.source === 'student') && !fb?.name;
+  // Native = posted directly from dashboard (source is company/student with no scraped fb_id)
+  const isNativePost = (post.source === 'company' || post.source === 'student') && !fb?.fb_id;
 
   if (isNativePost) {
     const skills = post.skills || [];
@@ -87,7 +88,14 @@ export function PostCard({ post }: PostCardProps) {
           <span className="flex items-center gap-1 text-xs font-medium text-[#0F6E56]">
             <CheckCircle2 className="w-3.5 h-3.5" /> Direct Post
           </span>
-          <Link href={`/wall/${post._id}`}><Button variant="outline" size="sm">View Post</Button></Link>
+          <div className="flex items-center gap-2">
+            {post.status === 'claimed' && (
+              <span className="flex items-center gap-1 text-xs font-medium text-[#0F6E56]">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Claimed
+              </span>
+            )}
+            <Link href={`/wall/${post._id}`}><Button variant="outline" size="sm">View Post</Button></Link>
+          </div>
         </div>
       </div>
     );

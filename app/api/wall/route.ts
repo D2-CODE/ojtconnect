@@ -33,14 +33,12 @@ export async function GET(req: NextRequest) {
     const query: Record<string, unknown> = {};
 
     if (mine) {
-      const orClauses: Record<string, unknown>[] = [];
-      if (postedBy) orClauses.push({ postedBy });
-      if (mineUserName) {
-        const nameRegex = { $regex: mineUserName, $options: 'i' };
-        orClauses.push({ 'SectionData.fbleads.name': nameRegex });
-        orClauses.push({ postedByName: nameRegex });
+      // Only match posts directly owned by this user — never match scraped posts by name
+      if (postedBy) {
+        query.postedBy = postedBy;
+      } else if (mineUserName) {
+        query.postedByName = { $regex: mineUserName, $options: 'i' };
       }
-      if (orClauses.length > 0) query['$or'] = orClauses;
     } else {
       query.isActive = true;
       if (postedBy) query.postedBy = postedBy;
@@ -48,8 +46,8 @@ export async function GET(req: NextRequest) {
       if (type === 'intern' || type === 'internship') {
         const nativeSource = type === 'intern' ? 'student' : 'company';
         query['$or'] = [
-          { 'SectionData.fbleads.lead_type': type, 'SectionData.fbleads.name': { $exists: true } },
-          { source: nativeSource, 'SectionData.fbleads.name': { $exists: false } },
+          { source: nativeSource },
+          { source: 'scraped', 'SectionData.fbleads.lead_type': type },
         ];
       }
       if (status && status !== 'all') query.status = status;
@@ -127,14 +125,6 @@ export async function POST(req: NextRequest) {
       slots: slots || 1,
       hoursRequired: hoursRequired || 300,
       deadline: deadline ? new Date(deadline) : undefined,
-      SectionData: {
-        fbleads: {
-          name: displayName,
-          post_text: description,
-          skills: Array.isArray(skills) ? skills.join(', ') : (skills || ''),
-          lead_type: leadType,
-        },
-      },
       status: 'unclaimed',
       isActive: true,
       createdAt: new Date(),

@@ -47,15 +47,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const isOwner = isAdmin || checkOwner(post, profileRef, session.user.name ?? null);
     if (!isOwner) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
 
-    const { title, description, skills, setup, location, hoursRequired } = await req.json();
+    const body = await req.json();
+    const { title, description, skills, setup, location, allowance, slots, hoursRequired, deadline } = body;
+    const isNativePost = (post.source === 'company' || post.source === 'student') && !post.SectionData?.fbleads?.name;
     const updateFields: Record<string, unknown> = {
-      title, description, skills, setup, location, hoursRequired,
-      'SectionData.fbleads.post_text': description,
-      'SectionData.fbleads.skills': Array.isArray(skills) ? skills.join(', ') : (skills || ''),
-      'SectionData.fbleads.name': title,
-      postedBy: profileRef,
-      source: session.user.roleName,
+      title, description, skills, setup, location, allowance, slots, hoursRequired,
+      deadline: deadline ? new Date(deadline) : undefined,
     };
+    // Only update fbleads fields for scraped posts
+    if (!isNativePost) {
+      updateFields['SectionData.fbleads.post_text'] = description;
+      updateFields['SectionData.fbleads.skills'] = Array.isArray(skills) ? skills.join(', ') : (skills || '');
+    }
 
     const updated = await OjtWall.findByIdAndUpdate(id, { $set: updateFields }, { new: true }).lean();
     return NextResponse.json({ success: true, data: updated });
