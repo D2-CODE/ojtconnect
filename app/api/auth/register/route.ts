@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
       password: hashedPassword, role: role._id,
       profileType: actualProfileType, profileRef,
       isActive: true, profileComplete: false,
+      isEmailVerified: true, // verified via OTP before registration
     });
 
     // Send welcome email (non-blocking)

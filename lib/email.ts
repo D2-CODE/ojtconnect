@@ -162,6 +162,22 @@ export async function sendEmail(
 }
 
 // ---------------------------------------------------------------------------
+// 0. OTP verification
+// ---------------------------------------------------------------------------
+export async function sendOtpEmail(to: string, otp: string): Promise<boolean> {
+  const subject = `Your OJT Connect PH verification code: ${otp}`;
+  const html = layout(`
+    ${h1('Verify your email address')}
+    ${p('Use the code below to verify your email. It expires in <strong>10 minutes</strong>.')}
+    <div style="margin:28px 0;text-align:center">
+      <span style="display:inline-block;background:#f0faf6;border:2px dashed #0F6E56;border-radius:12px;padding:18px 40px;font-size:36px;font-weight:700;letter-spacing:10px;color:#0F6E56">${otp}</span>
+    </div>
+    ${p('If you did not request this, you can safely ignore this email.', 'font-size:13px;color:#6b7280')}
+  `);
+  return sendEmail(to, subject, html, 'generic');
+}
+
+// ---------------------------------------------------------------------------
 // 1. Welcome — new registration
 // ---------------------------------------------------------------------------
 export async function sendWelcomeEmail(
