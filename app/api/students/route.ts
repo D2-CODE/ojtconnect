@@ -17,13 +17,14 @@ export async function GET(req: NextRequest) {
 
     const isAdmin = session?.user?.roleName === 'super_admin';
     const isUniAdmin = session?.user?.roleName === 'university_admin';
+    const isCompany = session?.user?.roleName === 'company';
 
     const query: Record<string, unknown> = {};
     if (!isAdmin) query.isVisible = true;
     if (preferredSetup) query.preferredSetup = preferredSetup;
     if (universityId) query.universityId = universityId;
     if (verificationStatus) query.universityVerificationStatus = verificationStatus;
-    else if (!isAdmin && !isUniAdmin) query.universityVerificationStatus = 'verified';
+    else if (!isAdmin && !isUniAdmin && !isCompany) query.universityVerificationStatus = 'verified';
     if (search) {
       query['$or'] = [
         { displayName: { $regex: search, $options: 'i' } },

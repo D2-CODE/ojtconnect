@@ -12,7 +12,7 @@ import { useToast } from '@/components/ui/Toast';
 import { SkillTag } from '@/components/ui/SkillTag';
 import {
   GraduationCap, Plus, Pencil, Trash2, Eye, CheckCircle,
-  Clock, XCircle, ArrowRight, AlertCircle, MapPin, Timer, Monitor,
+  Clock, AlertCircle, MapPin, Timer, Monitor,
 } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
@@ -49,58 +49,6 @@ interface Post {
 }
 
 const EMPTY_FORM = { title: '', description: '', skills: [] as string[], setup: '', location: '', hoursRequired: 300 };
-
-function VerificationGate({ status, hasUniversity, hasProfile }: { status: string; hasUniversity: boolean; hasProfile: boolean }) {
-  const steps = [
-    { done: hasProfile, label: 'Complete your profile', desc: 'Add your name, course, and year level.', link: '/student/profile', linkLabel: 'Go to Profile' },
-    { done: hasUniversity, label: 'Set your university', desc: 'Select your university in your profile.', link: '/student/profile', linkLabel: 'Set University' },
-    { done: status === 'pending' || status === 'verified', label: 'Request verification', desc: 'Submit a verification request to your university admin.', link: '/student/verification', linkLabel: 'Request Now' },
-    { done: status === 'verified', label: 'Get approved by university admin', desc: 'Wait for your university admin to approve your request.', link: null, linkLabel: null },
-  ];
-  const statusBanner = ({
-    pending: { icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50 border-amber-200', text: 'Your verification request is pending. University admin will review it soon.' },
-    rejected: { icon: XCircle, color: 'text-red-500', bg: 'bg-red-50 border-red-200', text: 'Your verification was rejected. Please resubmit from the verification page.' },
-  } as Record<string, { icon: typeof Clock; color: string; bg: string; text: string }>)[status] ?? { icon: AlertCircle, color: 'text-gray-400', bg: 'bg-gray-50 border-gray-200', text: 'Complete the steps below to unlock wall posting.' };
-  const BannerIcon = statusBanner.icon;
-  return (
-    <div className="max-w-lg mx-auto">
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 rounded-full bg-[#E8F5F1] flex items-center justify-center mx-auto mb-4">
-          <GraduationCap className="w-8 h-8 text-[#0F6E56]" />
-        </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">University Verification Required</h2>
-        <p className="text-sm text-gray-500">You need to be verified by your university before you can post on the OJT Wall.</p>
-      </div>
-      <div className={`border rounded-xl p-4 mb-6 flex items-start gap-3 ${statusBanner.bg}`}>
-        <BannerIcon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${statusBanner.color}`} />
-        <p className="text-sm text-gray-700">{statusBanner.text}</p>
-      </div>
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Steps to unlock</h3>
-        <div className="flex flex-col gap-4">
-          {steps.map((step, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${step.done ? 'bg-[#0F6E56]' : 'bg-gray-100'}`}>
-                {step.done ? <CheckCircle className="w-4 h-4 text-white" /> : <span className="text-xs font-bold text-gray-400">{i + 1}</span>}
-              </div>
-              <div className="flex-1">
-                <p className={`text-sm font-medium ${step.done ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{step.label}</p>
-                {!step.done && <p className="text-xs text-gray-500 mt-0.5">{step.desc}</p>}
-              </div>
-              {!step.done && step.link && (
-                <Link href={step.link}>
-                  <Button variant="outline" className="text-xs px-3 py-1.5 h-auto flex items-center gap-1">
-                    {step.linkLabel} <ArrowRight className="w-3 h-3" />
-                  </Button>
-                </Link>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function resolvePost(p: Post) {
   const fb = p.SectionData?.fbleads;
@@ -140,6 +88,7 @@ export default function StudentWallPage() {
   }, [sessionStatus]);
 
   const isVerified = profile?.universityVerificationStatus === 'verified';
+  const verificationStatus = profile?.universityVerificationStatus || 'unverified';
 
   const openCreate = () => {
     setEditPost(null);
@@ -233,63 +182,67 @@ export default function StudentWallPage() {
         </div>
         {isVerified && (
           <Button onClick={openCreate} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" /> New Post
-          </Button>
+          <Plus className="w-4 h-4" /> New Post
+        </Button>
         )}
       </div>
 
-      {!isVerified ? (
-        <VerificationGate
-          status={profile?.universityVerificationStatus || 'unverified'}
-          hasUniversity={!!profile?.universityId}
-          hasProfile={!!profile?.firstName}
-        />
+      {/* Verification status banner — informational only, not a blocker */}
+      {isVerified ? (
+        <div className="bg-[#E8F5F1] border border-[#0F6E56]/20 rounded-xl p-3 mb-6 flex items-center gap-2">
+          <CheckCircle className="w-4 h-4 text-[#0F6E56]" />
+          <span className="text-sm text-[#0F6E56] font-medium">University verified — your posts show a verified badge</span>
+        </div>
+      ) : verificationStatus === 'pending' ? (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-6 flex items-center gap-2">
+          <Clock className="w-4 h-4 text-amber-500" />
+          <span className="text-sm text-amber-700">Verification pending — get verified to show a university badge on your posts. <Link href="/student/verification" className="font-medium underline">Check status</Link></span>
+        </div>
       ) : (
-        <>
-          <div className="bg-[#E8F5F1] border border-[#0F6E56]/20 rounded-xl p-3 mb-6 flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-[#0F6E56]" />
-            <span className="text-sm text-[#0F6E56] font-medium">University verified — you can post on the OJT Wall</span>
-          </div>
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mb-6 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-gray-400" />
+          <span className="text-sm text-gray-500">Get university verified to show a verified badge on your posts. <Link href="/student/verification" className="font-medium text-[#0F6E56] hover:underline">Request verification</Link></span>
+        </div>
+      )}
 
-          {posts.length === 0 ? (
-            <EmptyState icon={GraduationCap} title="No posts yet" description="Create a post to let companies know you're looking for an OJT." action={{ label: 'Create Post', onClick: openCreate }} />
-          ) : (
-            <div className="flex flex-col gap-4">
-              {posts.map((p) => {
-                const { title, description, skills, setup, location, hoursRequired } = resolvePost(p);
-                return (
-                  <div key={p._id} className="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-sm transition-shadow">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <h3 className="font-semibold text-gray-900">{title}</h3>
-                          <Badge label="Active" variant="success" />
-                          {setup && <Badge label={setup} variant="neutral" />}
-                        </div>
-                        <p className="text-sm text-gray-500 line-clamp-2 mb-3">{description}</p>
-                        <div className="flex flex-wrap gap-1.5 mb-3">
-                          {skills.slice(0, 5).map((s) => <SkillTag key={s} skill={s} />)}
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-gray-400">
-                          {location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{location}</span>}
-                          {hoursRequired > 0 && <span className="flex items-center gap-1"><Timer className="w-3 h-3" />{hoursRequired} hrs</span>}
-                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Posted {formatDate(p.createdAt)}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <Link href={`/wall/${p._id}`} target="_blank">
-                          <Button variant="ghost" className="p-2 h-auto"><Eye className="w-4 h-4" /></Button>
-                        </Link>
-                        <Button variant="ghost" className="p-2 h-auto" onClick={() => openEdit(p)}><Pencil className="w-4 h-4" /></Button>
-                        <Button variant="ghost" className="p-2 h-auto text-red-500 hover:bg-red-50" onClick={() => setDeleteId(p._id)}><Trash2 className="w-4 h-4" /></Button>
-                      </div>
+      {posts.length === 0 ? (
+        <EmptyState icon={GraduationCap} title="No posts yet" description="Create a post to let companies know you're looking for an OJT." action={{ label: 'Create Post', onClick: openCreate }} />
+      ) : (
+        <div className="flex flex-col gap-4">
+          {posts.map((p) => {
+            const { title, description, skills, setup, location, hoursRequired } = resolvePost(p);
+            return (
+              <div key={p._id} className="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-sm transition-shadow">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <h3 className="font-semibold text-gray-900">{title}</h3>
+                      <Badge label="Active" variant="success" />
+                      {setup && <Badge label={setup} variant="neutral" />}
+                      {isVerified && <Badge label="Uni Verified" variant="primary" />}
+                    </div>
+                    <p className="text-sm text-gray-500 line-clamp-2 mb-3">{description}</p>
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {skills.slice(0, 5).map((s) => <SkillTag key={s} skill={s} />)}
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-gray-400">
+                      {location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{location}</span>}
+                      {hoursRequired > 0 && <span className="flex items-center gap-1"><Timer className="w-3 h-3" />{hoursRequired} hrs</span>}
+                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Posted {formatDate(p.createdAt)}</span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Link href={`/wall/${p._id}`} target="_blank">
+                      <Button variant="ghost" className="p-2 h-auto"><Eye className="w-4 h-4" /></Button>
+                    </Link>
+                    <Button variant="ghost" className="p-2 h-auto" onClick={() => openEdit(p)}><Pencil className="w-4 h-4" /></Button>
+                    <Button variant="ghost" className="p-2 h-auto text-red-500 hover:bg-red-50" onClick={() => setDeleteId(p._id)}><Trash2 className="w-4 h-4" /></Button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {/* Create / Edit Modal */}

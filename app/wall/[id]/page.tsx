@@ -78,6 +78,9 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                 <div className="flex items-center gap-3 mt-2 flex-wrap">
                   <Badge label={isIntern ? 'Seeking OJT' : 'Offering Internship'} variant={isIntern ? 'primary' : 'success'} />
                   {isNativePost && <Badge label="Direct Post" variant="success" />}
+                  {isNativePost && isIntern && (post as {isStudentVerified?: boolean}).isStudentVerified && (
+                    <Badge label="University Verified" variant="primary" />
+                  )}
                   {!isNativePost && post.status === 'claimed' && <Badge label="Claimed" variant="success" />}
                   {date && (
                     <span className="flex items-center gap-1 text-xs text-gray-400">

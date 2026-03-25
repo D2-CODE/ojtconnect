@@ -30,6 +30,7 @@ interface IOjtWallPost {
   slots?: number;
   hoursRequired?: number;
   deadline?: string;
+  isStudentVerified?: boolean;
   SectionData?: { fbleads?: FbLead };
   status?: string;
   claimedBy?: string;
@@ -85,9 +86,16 @@ export function PostCard({ post }: PostCardProps) {
           {post.allowance && <span className="flex items-center gap-1"><Banknote className="w-3 h-3" />{post.allowance}</span>}
         </div>
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
-          <span className="flex items-center gap-1 text-xs font-medium text-[#0F6E56]">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Direct Post
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 text-xs font-medium text-[#0F6E56]">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Direct Post
+            </span>
+            {isIntern && post.isStudentVerified && (
+              <span className="flex items-center gap-1 text-xs font-medium text-blue-600">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Uni Verified
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             {post.status === 'claimed' && (
               <span className="flex items-center gap-1 text-xs font-medium text-[#0F6E56]">

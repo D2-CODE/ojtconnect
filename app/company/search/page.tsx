@@ -7,7 +7,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
-import { Search, Users } from 'lucide-react';
+import { Search, Users, AlertCircle } from 'lucide-react';
 
 export default function CompanySearchPage() {
   const [students, setStudents] = useState<unknown[]>([]);
@@ -20,10 +20,10 @@ export default function CompanySearchPage() {
   const [sending, setSending] = useState(false);
   const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
   const [connectionStatusMap, setConnectionStatusMap] = useState<Map<string, 'pending' | 'accepted' | 'rejected'>>(new Map());
+  const [dailyLimit, setDailyLimit] = useState<{ remaining: number; resetAt: string | null }>({ remaining: 3, resetAt: null });
   const { toast: showToast } = useToast();
   const limit = 12;
 
-  // Load existing connections once on mount to pre-hide Connect buttons
   useEffect(() => {
     fetch('/api/connections').then((r) => r.json()).then((d) => {
       if (d.success) {
@@ -36,11 +36,14 @@ export default function CompanySearchPage() {
         setConnectionStatusMap(map);
       }
     });
+    fetch('/api/connections/limit').then((r) => r.json()).then((d) => {
+      if (d.success) setDailyLimit({ remaining: d.remaining, resetAt: d.resetAt });
+    });
   }, []);
 
   const load = useCallback(() => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: String(limit), verificationStatus: 'verified' });
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (search) params.set('search', search);
     fetch(`/api/students?${params}`).then((r) => r.json()).then((d) => {
       if (d.success) { setStudents(d.data); setTotal(d.meta?.total || 0); }
@@ -65,6 +68,9 @@ export default function CompanySearchPage() {
         setConnectId(null);
         setMessage('');
         showToast('Connection request sent!', 'success');
+        fetch('/api/connections/limit').then((r) => r.json()).then((d) => {
+          if (d.success) setDailyLimit({ remaining: d.remaining, resetAt: d.resetAt });
+        });
       } else showToast(d.error || 'Failed', 'error');
     } finally { setSending(false); }
   };
@@ -73,8 +79,21 @@ export default function CompanySearchPage() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Find Students</h1>
-        <p className="text-gray-500 text-sm mt-1">Discover verified OJT candidates.</p>
+        <p className="text-gray-500 text-sm mt-1">Discover OJT candidates.</p>
       </div>
+
+      {dailyLimit.remaining === 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium text-amber-800 text-sm">Daily connection limit reached</p>
+            <p className="text-amber-600 text-xs mt-0.5">
+              You can send up to 3 requests per 24 hours.
+              {dailyLimit.resetAt && ` Resets at ${new Date(dailyLimit.resetAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`}
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="mb-6 relative">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -101,7 +120,7 @@ export default function CompanySearchPage() {
                   key={student._id}
                   student={s as never}
                   connectionStatus={connectionStatusMap.get(student._id) ?? null}
-                  onConnect={connectedIds.has(student._id) ? undefined : (id) => setConnectId(id)}
+                  onConnect={connectedIds.has(student._id) || dailyLimit.remaining === 0 ? undefined : (id) => setConnectId(id)}
                 />
               );
             })}

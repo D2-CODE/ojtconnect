@@ -30,6 +30,7 @@ export interface IOjtWall extends Document<string> {
   source?: OjtWallSource;
   postedBy?: string;
   postedByName?: string;
+  isStudentVerified?: boolean;
   title?: string;
   description?: string;
   skills?: string[];
@@ -88,6 +89,7 @@ const OjtWallSchema = new Schema<IOjtWall>(
     source: { type: String, enum: ['scraped', 'company', 'student'] as OjtWallSource[], default: 'scraped' },
     postedBy: { type: String },
     postedByName: { type: String },
+    isStudentVerified: { type: Boolean, default: false },
     title: { type: String },
     description: { type: String },
     skills: { type: [String], default: [] },

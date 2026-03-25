@@ -91,12 +91,13 @@ export async function POST(req: NextRequest) {
       profileRef = user?.profileRef ?? null;
     }
     if (!profileRef) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 400 });
+    // Fetch student display name — no verification gate
+    let displayName = session.user.name;
+    let isStudentVerified = false;
     if (role === 'student') {
       const Student = (await import('@/models/Student')).default;
-      const student = await Student.findById(profileRef).lean();
-      if (!student || student.universityVerificationStatus !== 'verified') {
-        return NextResponse.json({ success: false, error: 'You must be university-verified before posting on the wall.' }, { status: 403 });
-      }
+      const student = await Student.findById(profileRef).lean<{ universityVerificationStatus: string }>();
+      isStudentVerified = student?.universityVerificationStatus === 'verified';
     }
     const body = await req.json();
     const { title, description, skills, setup, location, allowance, slots, hoursRequired, deadline } = body;
@@ -104,7 +105,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Title and description are required' }, { status: 400 });
     }
     // Use company name for display instead of user login name
-    let displayName = session.user.name;
     if (role === 'company') {
       const Company = (await import('@/models/Company')).default;
       const company = await Company.findById(profileRef).lean<{ companyName?: string }>();
@@ -116,6 +116,7 @@ export async function POST(req: NextRequest) {
       source: role,
       postedBy: profileRef,
       postedByName: displayName,
+      isStudentVerified: role === 'student' ? isStudentVerified : undefined,
       title,
       description,
       skills: skills || [],

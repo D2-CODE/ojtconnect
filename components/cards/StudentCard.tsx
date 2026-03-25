@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/Avatar';
 import { SkillTag } from '@/components/ui/SkillTag';
-import { Badge } from '@/components/ui/Badge';
+import { getVerificationBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { MapPin } from 'lucide-react';
 
@@ -31,7 +31,6 @@ interface StudentCardProps {
 export function StudentCard({ student, onConnect, connectionStatus, profileBasePath = '/company/students' }: StudentCardProps) {
   const name = student.displayName || `${student.firstName || ''} ${student.lastName || ''}`.trim() || 'Student';
   const skills = (student.skills || []).slice(0, 4);
-  const isVerified = student.universityVerificationStatus === 'verified';
 
   return (
     <div className="bg-white rounded-[16px] border border-gray-200 p-5 flex flex-col items-center gap-3 hover:shadow-md transition-shadow w-full">
@@ -55,7 +54,7 @@ export function StudentCard({ student, onConnect, connectionStatus, profileBaseP
         </div>
       )}
 
-      {isVerified && <Badge label="Verified" variant="success" />}
+      {student.universityVerificationStatus === 'verified' && getVerificationBadge('verified')}
 
       <div className="w-full mt-1">
         {connectionStatus === 'accepted' && (

@@ -19,17 +19,25 @@ export default function CompanyDashboardPage() {
   const [connectId, setConnectId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [dailyLimit, setDailyLimit] = useState<{ remaining: number; resetAt: string | null }>({ remaining: 3, resetAt: null });
   const { toast: showToast } = useToast();
+
+  const refreshLimit = () =>
+    fetch('/api/connections/limit').then((r) => r.json()).then((d) => {
+      if (d.success) setDailyLimit({ remaining: d.remaining, resetAt: d.resetAt });
+    });
 
   useEffect(() => {
     Promise.all([
       fetch('/api/profile').then((r) => r.json()),
       fetch('/api/connections').then((r) => r.json()),
-      fetch('/api/students?verificationStatus=verified&limit=4').then((r) => r.json()),
-    ]).then(([p, c, s]) => {
+      fetch('/api/students?limit=4').then((r) => r.json()),
+      fetch('/api/connections/limit').then((r) => r.json()),
+    ]).then(([p, c, s, l]) => {
       if (p.success) setProfile(p.data);
       if (c.success) setConnections(c.data);
       if (s.success) setRecentStudents(s.data);
+      if (l.success) setDailyLimit({ remaining: l.remaining, resetAt: l.resetAt });
     }).finally(() => setLoading(false));
   }, []);
 
@@ -49,15 +57,14 @@ export default function CompanyDashboardPage() {
         showToast('Connection request sent!', 'success');
         setConnectId(null);
         setMessage('');
-        // Refresh connections so button hides immediately
         fetch('/api/connections').then((r) => r.json()).then((d) => { if (d.success) setConnections(d.data); });
+        refreshLimit();
       } else showToast(d.error || 'Failed', 'error');
     } finally { setSending(false); }
   };
 
   const isSetup = profile?.companyName;
   const pendingConnections = (connections as Array<{ status: string }>).filter((c) => c.status === 'pending').length;
-  // Map of studentProfileId → connection status
   const connectionStatusMap = new Map<string, 'pending' | 'accepted' | 'rejected'>(
     (connections as Array<{ toProfileId: string; status: string }>)
       .filter((c) => ['pending', 'accepted', 'rejected'].includes(c.status))
@@ -118,7 +125,7 @@ export default function CompanyDashboardPage() {
         <Link href="/company/search" className="bg-white rounded-xl border border-gray-200 p-5 hover:border-[#0F6E56] transition-colors flex items-center justify-between group">
           <div>
             <h3 className="font-semibold text-gray-900">Search Students</h3>
-            <p className="text-sm text-gray-500 mt-0.5">Find verified OJT candidates</p>
+            <p className="text-sm text-gray-500 mt-0.5">Find OJT candidates</p>
           </div>
           <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#0F6E56]" />
         </Link>
@@ -137,8 +144,22 @@ export default function CompanyDashboardPage() {
           <h2 className="font-bold text-gray-900">Recent Students</h2>
           <Link href="/company/search" className="text-sm text-[#0F6E56] hover:underline">View all →</Link>
         </div>
+
+        {dailyLimit.remaining === 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-amber-800 text-sm">Daily connection limit reached (3/3)</p>
+              <p className="text-amber-600 text-xs mt-0.5">
+                You can send up to 3 requests per 24 hours.
+                {dailyLimit.resetAt && ` Resets at ${new Date(dailyLimit.resetAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`}
+              </p>
+            </div>
+          </div>
+        )}
+
         {recentStudents.length === 0 ? (
-          <EmptyState icon={Users} title="No students yet" description="Browse verified students to start connecting." />
+          <EmptyState icon={Users} title="No students yet" description="Browse students to start connecting." />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {recentStudents.map((s) => {
@@ -148,7 +169,7 @@ export default function CompanyDashboardPage() {
                   key={student._id}
                   student={s as never}
                   connectionStatus={connectionStatusMap.get(student._id) ?? null}
-                  onConnect={connectedProfileIds.has(student._id) ? undefined : (id) => setConnectId(id)}
+                  onConnect={connectedProfileIds.has(student._id) || dailyLimit.remaining === 0 ? undefined : (id) => setConnectId(id)}
                 />
               );
             })}
