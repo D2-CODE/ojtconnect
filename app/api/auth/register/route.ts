@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
         _id: profileId, userId,
         companyName: companyName || name, slug: slugify(companyName || name),
         industry: industry || '', location: location || '', email, website: website || '',
-        isVisible: true, isVerified: false, internSlotsOpen: 0, acceptsMOA: true,
+        isVisible: true, isVerified: false,
       });
       profileRef = profileId;
     } else if (profileType === 'university') {

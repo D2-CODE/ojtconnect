@@ -1,14 +1,13 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useToast } from '@/components/ui/Toast';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
-import { SkillTag } from '@/components/ui/SkillTag';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Building2, Camera, X } from 'lucide-react';
 
 const INDUSTRY_OPTIONS = ['Information Technology', 'Business Process Outsourcing', 'Manufacturing', 'Finance & Banking', 'Healthcare', 'Education', 'Real Estate', 'Retail', 'Others'].map((i) => ({ value: i, label: i }));
-const DURATION_OPTIONS = ['1 month', '2 months', '3 months', '4 months', '5 months', '6 months', '6+ months'].map((d) => ({ value: d, label: d }));
 
 interface CompanyProfile {
   companyName: string;
@@ -18,45 +17,81 @@ interface CompanyProfile {
   description: string;
   contactEmail: string;
   phone: string;
-  preferredSkills: string[];
-  internshipDetails: {
-    duration: string;
-    slots: number;
-    allowance: string;
-    workSetup: string;
-    description: string;
-  };
+  logo: string;
 }
 
 export default function CompanyProfilePage() {
   const { toast: showToast } = useToast();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [skillInput, setSkillInput] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState<CompanyProfile>({
-    companyName: '', industry: '', location: '', website: '', description: '', contactEmail: '', phone: '',
-    preferredSkills: [], internshipDetails: { duration: '3 months', slots: 5, allowance: '', workSetup: '', description: '' },
+    companyName: '', industry: '', location: '', website: '',
+    description: '', contactEmail: '', phone: '', logo: '',
   });
 
   useEffect(() => {
     fetch('/api/profile').then((r) => r.json()).then((d) => {
-      if (d.success && d.data) setForm({ ...form, ...d.data, preferredSkills: d.data.preferredSkills || [], internshipDetails: { ...form.internshipDetails, ...(d.data.internshipDetails || {}) } });
+      if (d.success && d.data) {
+        setForm({
+          companyName: d.data.companyName || '',
+          industry: d.data.industry || '',
+          location: d.data.location || '',
+          website: d.data.website || '',
+          description: d.data.description || '',
+          contactEmail: d.data.contactEmail || d.data.email || '',
+          phone: d.data.phone || '',
+          logo: d.data.logo || '',
+        });
+      }
     }).finally(() => setLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const set = (field: string, value: unknown) => setForm((f) => ({ ...f, [field]: value }));
-  const setIntern = (field: string, value: unknown) => setForm((f) => ({ ...f, internshipDetails: { ...f.internshipDetails, [field]: value } }));
+  const set = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
 
-  const addSkill = () => {
-    const s = skillInput.trim();
-    if (s && !form.preferredSkills.includes(s)) { set('preferredSkills', [...form.preferredSkills, s]); setSkillInput(''); }
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Client-side validation before upload
+    if (file.size > 200 * 1024) {
+      showToast('Image must be under 200 KB', 'error');
+      e.target.value = '';
+      return;
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'].includes(file.type)) {
+      showToast('Only JPG, PNG, WebP or SVG allowed', 'error');
+      e.target.value = '';
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const d = await res.json();
+      if (d.success) {
+        set('logo', d.url);
+        showToast('Logo uploaded', 'success');
+      } else {
+        showToast(d.error || 'Upload failed', 'error');
+      }
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
       const d = await res.json();
       if (d.success) showToast('Profile saved!', 'success');
       else showToast(d.error || 'Failed to save', 'error');
@@ -75,46 +110,86 @@ export default function CompanyProfilePage() {
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col gap-4">
+
+        {/* Logo upload */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-gray-700">Company Logo</label>
+          <div className="flex items-center gap-4">
+            {/* Avatar / preview */}
+            <div className="relative flex-shrink-0">
+              <div className="w-20 h-20 rounded-2xl border-2 border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
+                {form.logo ? (
+                  <img src={form.logo} alt="Company logo" className="w-full h-full object-contain" />
+                ) : (
+                  <Building2 className="w-8 h-8 text-gray-300" />
+                )}
+              </div>
+              {/* Camera overlay button */}
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-[#0F6E56] border-2 border-white flex items-center justify-center hover:bg-[#0A5A45] transition-colors disabled:opacity-50"
+              >
+                {uploading ? (
+                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Camera className="w-3.5 h-3.5 text-white" />
+                )}
+              </button>
+            </div>
+
+            {/* Info + actions */}
+            <div className="flex flex-col gap-1.5">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="text-sm font-medium text-[#0F6E56] hover:text-[#0A5A45] disabled:text-gray-400 text-left transition-colors"
+              >
+                {uploading ? 'Uploading…' : form.logo ? 'Change logo' : 'Upload logo'}
+              </button>
+              <p className="text-xs text-gray-400">JPG, PNG, WebP or SVG · Max 200 KB</p>
+              {form.logo && (
+                <button
+                  type="button"
+                  onClick={() => set('logo', '')}
+                  className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 transition-colors w-fit"
+                >
+                  <X className="w-3 h-3" /> Remove logo
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Hidden file input */}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/svg+xml"
+            className="hidden"
+            onChange={handleLogoChange}
+          />
+        </div>
+
+        <hr className="border-gray-100" />
+
         <Input label="Company Name" value={form.companyName} onChange={(e) => set('companyName', e.target.value)} placeholder="TechCorp Philippines Inc." />
         <Select label="Industry" value={form.industry} onChange={(e) => set('industry', e.target.value)} options={INDUSTRY_OPTIONS} placeholder="Select industry" />
         <Input label="Location" value={form.location} onChange={(e) => set('location', e.target.value)} placeholder="Makati City, Metro Manila" />
         <Input label="Website" value={form.website} onChange={(e) => set('website', e.target.value)} placeholder="https://company.com" />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">About the Company</label>
-          <textarea className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F6E56] resize-none" rows={3}
-            value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Brief company description..." />
+          <textarea
+            className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F6E56] resize-none"
+            rows={3}
+            value={form.description}
+            onChange={(e) => set('description', e.target.value)}
+            placeholder="Brief company description..."
+          />
         </div>
         <Input label="Contact Email" type="email" value={form.contactEmail} onChange={(e) => set('contactEmail', e.target.value)} placeholder="hr@company.com" />
         <Input label="Phone" value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+63 2 8XXX XXXX" />
-
-        <hr className="border-gray-100" />
-        <h3 className="font-semibold text-gray-800">Internship Details</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <Select label="Duration" value={form.internshipDetails.duration} onChange={(e) => setIntern('duration', e.target.value)} options={DURATION_OPTIONS} />
-          <Input label="Slots Available" type="number" value={String(form.internshipDetails.slots)} onChange={(e) => setIntern('slots', Number(e.target.value))} />
-        </div>
-        <Input label="Allowance" value={form.internshipDetails.allowance} onChange={(e) => setIntern('allowance', e.target.value)} placeholder="e.g. ₱500/day or None" />
-        <Input label="Work Setup" value={form.internshipDetails.workSetup} onChange={(e) => setIntern('workSetup', e.target.value)} placeholder="On-site / Remote / Hybrid" />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Internship Description</label>
-          <textarea className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F6E56] resize-none" rows={3}
-            value={form.internshipDetails.description} onChange={(e) => setIntern('description', e.target.value)} placeholder="What will interns do?" />
-        </div>
-
-        <hr className="border-gray-100" />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Preferred Skills</label>
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {form.preferredSkills.map((s) => <SkillTag key={s} skill={s} onRemove={() => set('preferredSkills', form.preferredSkills.filter((x) => x !== s))} />)}
-          </div>
-          <div className="flex gap-2">
-            <input className="flex-1 border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F6E56]"
-              value={skillInput} onChange={(e) => setSkillInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-              placeholder="Add a preferred skill" />
-            <Button type="button" variant="outline" onClick={addSkill}>Add</Button>
-          </div>
-        </div>
 
         <Button onClick={handleSave} loading={saving} className="w-full mt-2">Save Profile</Button>
       </div>

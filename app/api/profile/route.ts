@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest) {
     if (!profileRef) return NextResponse.json({ success: false, error: 'No profile found' }, { status: 404 });
     const raw = await req.json();
     // Strip empty strings on enum fields to prevent Mongoose ValidationError
-    const ENUM_FIELDS = ['preferredSetup', 'setup', 'companySize', 'internshipSetup'];
+    const ENUM_FIELDS = ['preferredSetup', 'setup', 'companySize'];
     const body: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(raw)) {
       if (ENUM_FIELDS.includes(k) && v === '') continue;

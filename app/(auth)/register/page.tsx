@@ -289,7 +289,7 @@ export default function RegisterPage() {
                   )}
                   {profileType === 'company' && (
                     <>
-                      <Input label="Company Name" value={form.companyName} onChange={(e) => set('companyName', e.target.value)} placeholder="TechCorp Philippines Inc." required />
+                      <Input label="Company Name" value={form.companyName} onChange={(e) => set('companyName', e.target.value)} placeholder="WORK24 Philippines" required />
                       <Select label="Industry" value={form.industry} onChange={(e) => set('industry', e.target.value)} options={INDUSTRY_OPTIONS} placeholder="Select industry" required />
                       <Input label="Location" value={form.location} onChange={(e) => set('location', e.target.value)} placeholder="Makati City, Metro Manila" />
                     </>
