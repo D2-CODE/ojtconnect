@@ -2,10 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: [
-      "scontent.famd21-1.fna.fbcdn.net",
-      "graph.facebook.com",
-    ],
     remotePatterns: [
       {
         protocol: "https",

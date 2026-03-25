@@ -4,6 +4,7 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import Role from '@/models/Role';
 
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
 const IS_HTTPS = process.env.NEXTAUTH_URL?.startsWith('https') ?? false;
 const COOKIE_NAME = IS_HTTPS ? '__Secure-authjs.session-token' : 'authjs.session-token';
 // Auth.js v5 uses the cookie name as the salt for JWT encoding
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
         iat: Math.floor(Date.now() / 1000),
         exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
       },
-      secret: process.env.NEXTAUTH_SECRET!,
+      secret: AUTH_SECRET!,
       salt: JWT_SALT,
     });
 

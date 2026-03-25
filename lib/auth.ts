@@ -6,6 +6,8 @@ import User from "@/models/User";
 import Role from "@/models/Role";
 import type { ProfileType } from "@/types";
 
+const authSecret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   providers: [
@@ -85,5 +87,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
 
   pages: { signIn: "/login", error: "/login" },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: authSecret,
 });

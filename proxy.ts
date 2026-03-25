@@ -68,7 +68,17 @@ export async function proxy(req: NextRequest) {
   }
 
   // 2. Read JWT token from cookie (edge-runtime safe)
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const authSecret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+  const forwardedProto = req.headers.get("x-forwarded-proto");
+  const isHttps = forwardedProto === "https" || req.nextUrl.protocol === "https:";
+  const cookieNames = isHttps
+    ? ["__Secure-authjs.session-token", "authjs.session-token"]
+    : ["authjs.session-token", "__Secure-authjs.session-token"];
+
+  let token = await getToken({ req, secret: authSecret, cookieName: cookieNames[0] });
+  if (!token) {
+    token = await getToken({ req, secret: authSecret, cookieName: cookieNames[1] });
+  }
   const isAuthenticated = Boolean(token);
   const roleName = (token?.roleName as string) ?? "";
   const profileType = ((token?.profileType as string) ?? roleName) as ProfileType;
