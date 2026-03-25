@@ -30,38 +30,40 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const query: Record<string, unknown> = {};
+    const andClauses: Record<string, unknown>[] = [];
 
     if (mine) {
-      // Only match posts directly owned by this user — never match scraped posts by name
-      if (postedBy) {
-        query.postedBy = postedBy;
-      } else if (mineUserName) {
-        query.postedByName = { $regex: mineUserName, $options: 'i' };
-      }
+      if (postedBy) andClauses.push({ postedBy });
+      else if (mineUserName) andClauses.push({ postedByName: { $regex: mineUserName, $options: 'i' } });
     } else {
-      query.isActive = true;
-      if (postedBy) query.postedBy = postedBy;
-      if (source) query.source = source;
+      andClauses.push({ isActive: true });
+      if (postedBy) andClauses.push({ postedBy });
+      if (source) andClauses.push({ source });
       if (type === 'intern' || type === 'internship') {
         const nativeSource = type === 'intern' ? 'student' : 'company';
-        query['$or'] = [
-          { source: nativeSource },
-          { source: 'scraped', 'SectionData.fbleads.lead_type': type },
-        ];
+        andClauses.push({
+          $or: [
+            { source: nativeSource },
+            { source: 'scraped', 'SectionData.fbleads.lead_type': type },
+          ],
+        });
       }
-      if (status && status !== 'all') query.status = status;
+      if (status && status !== 'all') andClauses.push({ status });
     }
 
     if (search) {
-      query['$or'] = [
-        { 'SectionData.fbleads.name': { $regex: search, $options: 'i' } },
-        { 'SectionData.fbleads.post_text': { $regex: search, $options: 'i' } },
-        { 'SectionData.fbleads.skills': { $regex: search, $options: 'i' } },
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
+      andClauses.push({
+        $or: [
+          { 'SectionData.fbleads.name': { $regex: search, $options: 'i' } },
+          { 'SectionData.fbleads.post_text': { $regex: search, $options: 'i' } },
+          { 'SectionData.fbleads.skills': { $regex: search, $options: 'i' } },
+          { title: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } },
+        ],
+      });
     }
+
+    const query = andClauses.length > 0 ? { $and: andClauses } : {};
 
     const skip = (page - 1) * limit;
     const [posts, total] = await Promise.all([
