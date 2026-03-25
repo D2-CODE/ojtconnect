@@ -118,7 +118,7 @@ async function logEmail(opts: {
     await EmailLog.create({
       _id: generateId(),
       to: opts.to,
-      from: process.env.EMAIL_FROM ?? 'noreply@ojtconnect.ph',
+      from: process.env.EMAIL_FROM ?? 'ojtconnectph@hanaplatform.com',
       subject: opts.subject,
       template: opts.type as import('@/models/EmailLog').EmailTemplate,
       status: opts.status === 'sent' ? 'sent' : 'failed',
@@ -148,7 +148,7 @@ export async function sendEmail(
   let sendError: string | undefined;
   try {
     await getTransporter().sendMail({
-      from: `"${appName}" <${process.env.EMAIL_FROM ?? 'noreply@ojtconnect.ph'}>`,
+      from: `"${appName}" <${process.env.EMAIL_FROM ?? 'ojtconnectph@hanaplatform.com'}>`,
       to,
       subject,
       html,
