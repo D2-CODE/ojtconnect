@@ -56,16 +56,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'lead_type must be "intern" or "internship"' }, { status: 422 });
   }
 
-  console.log('[Scraper] ✅ Validation passed');
+  // 4. Deduplicate by fb_id — if already exists skip save and email
+  await connectDB();
 
-  // 4. DB connect
-  try {
-    console.log('[Scraper] Connecting to DB...');
-    await connectDB();
-    console.log('[Scraper] ✅ DB connected');
-  } catch (dbErr) {
-    console.log('[Scraper] ❌ DB connection failed:', dbErr);
-    return NextResponse.json({ success: false, error: 'DB connection failed' }, { status: 500 });
+  if (fb_id) {
+    const existing = await OjtWall.findOne({ 'SectionData.fbleads.fb_id': fb_id }).lean();
+    if (existing) {
+      return NextResponse.json({
+        success: true,
+        data: { id: (existing as { _id: string })._id, skipped: true, reason: 'duplicate' },
+      });
+    }
   }
 
   const claimToken = generateClaimToken();
@@ -112,25 +113,17 @@ export async function POST(req: NextRequest) {
 
   // 6. Send emails
   const emails = extractEmails(rawEmails);
-  console.log('[Scraper] Extracted emails:', emails);
-
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
   const posterName = String(name ?? 'there');
   const postText = String(post_text ?? '');
 
   const emailResults = await Promise.allSettled(
     emails.map(async (email) => {
-      const alreadySentToday = await EmailLog.exists({
+      const alreadySent = await EmailLog.exists({
         to: email,
         template: 'claim_invite',
         status: 'sent',
-        sentAt: { $gte: todayStart },
       });
-      if (alreadySentToday) {
-        console.log('[Scraper] ⏭ Email already sent today to:', email);
-        return false;
-      }
+      if (alreadySent) return false;
       const claimUrl = `${appUrl}/claim/${claimToken}?email=${encodeURIComponent(email)}`;
       console.log('[Scraper] Sending claim email to:', email, '| claimUrl:', claimUrl);
       const result = await sendClaimInviteEmail(email, posterName, claimUrl, postText);

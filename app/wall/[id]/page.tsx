@@ -4,13 +4,16 @@ import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
 import { SkillTag } from '@/components/ui/SkillTag';
 import { Button } from '@/components/ui/Button';
+import { ContactUnlockWidget } from '@/components/ui/ContactUnlockWidget';
+import { PostTextWithBlur } from '@/components/ui/PostTextWithBlur';
 import Link from 'next/link';
-import { ArrowLeft, Mail, Phone, Globe, Calendar, Building2, MapPin, Users, Banknote, Clock, AlarmClock } from 'lucide-react';
+import { ArrowLeft, Calendar, Building2, MapPin, Users, Banknote, Clock, AlarmClock } from 'lucide-react';
 
 import connectDB from '@/lib/mongodb';
 import OjtWall from '@/models/OjtWall';
 import Company from '@/models/Company';
 import Student from '@/models/Student';
+import { auth } from '@/lib/auth';
 
 async function getPost(id: string) {
   try {
@@ -35,6 +38,7 @@ async function getPost(id: string) {
 export default async function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const post = await getPost(id);
+  const session = await auth();
 
   if (!post) {
     return (
@@ -73,10 +77,10 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
             <div className="flex items-start gap-4 mb-6">
               <Avatar name={displayName} src={!isNativePost ? fb?.profile_pic : undefined} size="xl" />
               <div className="flex-1">
-                <h1 className="text-2xl font-bold text-gray-900">{isNativePost ? (post.title || displayName) : (displayName || 'Anonymous')}</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{isNativePost ? (post.title || displayName) : fb?.post_link || fb?.fb_id ? <a href={fb?.post_link || `https://www.facebook.com/${fb?.fb_id}`} target="_blank" rel="noopener noreferrer" className="hover:text-[#0F6E56] hover:underline">{displayName || 'Anonymous'}</a> : (displayName || 'Anonymous')}</h1>
                 {isNativePost && post.title && <p className="text-gray-500 text-sm mt-0.5">{displayName}</p>}
                 <div className="flex items-center gap-3 mt-2 flex-wrap">
-                  <Badge label={isIntern ? 'Seeking OJT' : 'Offering Internship'} variant={isIntern ? 'primary' : 'success'} />
+                  <Badge label={isIntern ? 'Looking for OJT' : 'Accepting OJT Applicants'} variant={isIntern ? 'primary' : 'success'} />
                   {isNativePost && <Badge label="Direct Post" variant="success" />}
                   {isNativePost && isIntern && (post as {isStudentVerified?: boolean}).isStudentVerified && (
                     <Badge label="University Verified" variant="primary" />
@@ -110,59 +114,29 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
 
             <div className="prose prose-sm max-w-none text-gray-700">
               <h3 className="text-base font-semibold text-gray-900 mb-3">{isNativePost ? 'Details' : 'Post Details'}</h3>
-              <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-600">{postText}</pre>
+              <PostTextWithBlur
+                postId={id}
+                text={postText as string || ''}
+                isCompany={session?.user?.roleName === 'company'}
+                isLoggedIn={!!session?.user}
+              />
             </div>
           </div>
 
           {/* Sidebar */}
           <aside className="w-72 flex-shrink-0 flex flex-col gap-4">
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
-              <h3 className="font-semibold text-gray-900 mb-4">Contact Information</h3>
-              {isNativePost ? (
-                post.contact?.email || post.contact?.phone || post.contact?.website ? (
-                  <div className="flex flex-col gap-2">
-                    {post.contact.email && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Mail className="w-4 h-4 text-[#0F6E56]" />
-                        <a href={`mailto:${post.contact.email}`} className="hover:text-[#0F6E56] break-all">{post.contact.email}</a>
-                      </div>
-                    )}
-                    {post.contact.phone && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Phone className="w-4 h-4 text-[#0F6E56]" />
-                        <span>{post.contact.phone}</span>
-                      </div>
-                    )}
-                    {post.contact.website && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Globe className="w-4 h-4 text-[#0F6E56]" />
-                        <a href={post.contact.website} target="_blank" rel="noopener noreferrer" className="hover:text-[#0F6E56] break-all">{post.contact.website}</a>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">No contact details available.</p>
-                )
-              ) : (
-                fb?.emails || fb?.phones ? (
-                  <>
-                    {fb?.emails && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                        <Mail className="w-4 h-4 text-[#0F6E56]" />
-                        <a href={`mailto:${fb.emails}`} className="hover:text-[#0F6E56] break-all">{fb.emails}</a>
-                      </div>
-                    )}
-                    {fb?.phones && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Phone className="w-4 h-4 text-[#0F6E56]" />
-                        <span>{fb.phones}</span>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-sm text-gray-500">Sign in and connect to get contact details.</p>
-                )
-              )}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-900">Contact Information</h3>
+              </div>
+              <ContactUnlockWidget
+                postId={id}
+                email={isNativePost ? post.contact?.email : (post.SectionData?.fbleads as {emails?: string})?.emails}
+                phone={isNativePost ? post.contact?.phone : (post.SectionData?.fbleads as {phones?: string})?.phones}
+                website={isNativePost ? post.contact?.website : undefined}
+                isCompany={session?.user?.roleName === 'company'}
+                isLoggedIn={!!session?.user}
+              />
             </div>
 
             {!isNativePost && post.status !== 'claimed' && (
