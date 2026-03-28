@@ -73,8 +73,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 4. Build document
+  // 4. Deduplicate by fb_id — if already exists skip save and email
   await connectDB();
+
+  if (fb_id) {
+    const existing = await OjtWall.findOne({ 'SectionData.fbleads.fb_id': fb_id }).lean();
+    if (existing) {
+      return NextResponse.json({
+        success: true,
+        data: { id: (existing as { _id: string })._id, skipped: true, reason: 'duplicate' },
+      });
+    }
+  }
 
   const claimToken = generateClaimToken();
   const claimTokenExpiry = new Date(
@@ -113,20 +123,17 @@ export async function POST(req: NextRequest) {
   // 5. Send claim invite to ALL valid emails — each with its own ?email= query param
   // Skip any email that already received a sent email today for this post
   const emails = extractEmails(rawEmails);
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
   const posterName = String(name ?? 'there');
   const postText = String(post_text ?? '');
 
   const emailResults = await Promise.allSettled(
     emails.map(async (email) => {
-      const alreadySentToday = await EmailLog.exists({
+      const alreadySent = await EmailLog.exists({
         to: email,
         template: 'claim_invite',
         status: 'sent',
-        sentAt: { $gte: todayStart },
       });
-      if (alreadySentToday) return false;
+      if (alreadySent) return false;
       const claimUrl = `${appUrl}/claim/${claimToken}?email=${encodeURIComponent(email)}`;
       return sendClaimInviteEmail(email, posterName, claimUrl, postText);
     })
