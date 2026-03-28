@@ -9,6 +9,8 @@ import { Calendar, MapPin, Users, Banknote, Monitor, CheckCircle2, Clock } from 
 interface FbLead {
   name?: string;
   fb_id?: string;
+  profile_url?: string;
+  post_link?: string;
   profile_pic?: string;
   post_text?: string;
   emails?: string;
@@ -70,7 +72,7 @@ export function PostCard({ post }: PostCardProps) {
               <span className="text-xs text-gray-400">{formatDate(post.createdAt)}</span>
             </div>
           </div>
-          <Badge label={isIntern ? 'Seeking OJT' : 'Offering Internship'} variant={isIntern ? 'primary' : 'success'} />
+          <Badge label={isIntern ? 'Looking for OJT' : 'Accepting OJT Applicants'} variant={isIntern ? 'primary' : 'success'} />
         </div>
         {post.title && <p className="font-semibold text-gray-800 text-sm">{post.title}</p>}
         <p className="text-gray-500 text-xs leading-relaxed">{truncate(post.description || '', 200)}</p>
@@ -118,13 +120,17 @@ export function PostCard({ post }: PostCardProps) {
       <div className="flex items-start gap-3">
         <Avatar name={fb.name} src={fb.profile_pic} size="md" />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 text-sm truncate">{fb.name || 'Anonymous'}</p>
+          {fb.post_link || fb.fb_id ? (
+            <a href={fb.post_link || `https://www.facebook.com/${fb.fb_id}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-900 text-sm truncate hover:text-[#0F6E56] hover:underline block">{fb.name || 'Anonymous'}</a>
+          ) : (
+            <p className="font-semibold text-gray-900 text-sm truncate">{fb.name || 'Anonymous'}</p>
+          )}
           <div className="flex items-center gap-1 mt-0.5">
             <Calendar className="w-3 h-3 text-gray-400" />
             <span className="text-xs text-gray-400">{formatDate(post.createdAt)}</span>
           </div>
         </div>
-        <Badge label={isIntern ? 'Seeking OJT' : 'Offering Internship'} variant={isIntern ? 'primary' : 'success'} />
+        <Badge label={isIntern ? 'Looking for OJT' : 'Accepting OJT Applicants'} variant={isIntern ? 'primary' : 'success'} />
       </div>
       <p className="text-gray-500 text-xs leading-relaxed">{truncate(fb.post_text || '', 200)}</p>
       {skills.length > 0 && (

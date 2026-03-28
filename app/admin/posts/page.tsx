@@ -21,7 +21,7 @@ interface Post {
   createdAt: string;
 }
 
-const TABS = [{ value: 'all', label: 'All' }, { value: 'intern', label: 'Seeking OJT' }, { value: 'internship', label: 'Offering' }, { value: 'claimed', label: 'Claimed' }, { value: 'company', label: 'Company Posts' }, { value: 'student', label: 'Student Posts' }];
+const TABS = [{ value: 'all', label: 'All' }, { value: 'intern', label: 'Looking for OJT' }, { value: 'internship', label: 'Accepting OJT' }, { value: 'claimed', label: 'Claimed' }, { value: 'company', label: 'Company Posts' }, { value: 'student', label: 'Student Posts' }];
 
 export default function AdminPostsPage() {
   const { toast: showToast } = useToast();
@@ -102,7 +102,7 @@ export default function AdminPostsPage() {
                       <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{displayName || 'Anonymous'}</td>
                       <td className="px-4 py-3 text-gray-500 text-xs max-w-xs">{truncate(isNative ? (p.title || displayText || '') : (displayText || ''), 80)}</td>
                       <td className="px-4 py-3"><Badge label={p.source || 'scraped'} variant={isNative ? 'success' : 'neutral'} /></td>
-                      <td className="px-4 py-3"><Badge label={leadType === 'intern' ? 'Seeking OJT' : 'Offering'} variant={leadType === 'intern' ? 'primary' : 'success'} /></td>
+                      <td className="px-4 py-3"><Badge label={leadType === 'intern' ? 'Looking for OJT' : 'Accepting OJT'} variant={leadType === 'intern' ? 'primary' : 'success'} /></td>
                       <td className="px-4 py-3"><Badge label={p.status || 'active'} variant={p.status === 'claimed' ? 'success' : 'neutral'} /></td>
                       <td className="px-4 py-3 text-gray-400 text-xs">{formatDate(p.createdAt)}</td>
                       <td className="px-4 py-3 text-right">

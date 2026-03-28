@@ -73,10 +73,10 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
             <div className="flex items-start gap-4 mb-6">
               <Avatar name={displayName} src={!isNativePost ? fb?.profile_pic : undefined} size="xl" />
               <div className="flex-1">
-                <h1 className="text-2xl font-bold text-gray-900">{isNativePost ? (post.title || displayName) : (displayName || 'Anonymous')}</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{isNativePost ? (post.title || displayName) : fb?.post_link || fb?.fb_id ? <a href={fb?.post_link || `https://www.facebook.com/${fb?.fb_id}`} target="_blank" rel="noopener noreferrer" className="hover:text-[#0F6E56] hover:underline">{displayName || 'Anonymous'}</a> : (displayName || 'Anonymous')}</h1>
                 {isNativePost && post.title && <p className="text-gray-500 text-sm mt-0.5">{displayName}</p>}
                 <div className="flex items-center gap-3 mt-2 flex-wrap">
-                  <Badge label={isIntern ? 'Seeking OJT' : 'Offering Internship'} variant={isIntern ? 'primary' : 'success'} />
+                  <Badge label={isIntern ? 'Looking for OJT' : 'Accepting OJT Applicants'} variant={isIntern ? 'primary' : 'success'} />
                   {isNativePost && <Badge label="Direct Post" variant="success" />}
                   {isNativePost && isIntern && (post as {isStudentVerified?: boolean}).isStudentVerified && (
                     <Badge label="University Verified" variant="primary" />

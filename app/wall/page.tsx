@@ -14,8 +14,8 @@ import Link from 'next/link';
 
 const TABS = [
   { label: 'All Posts', value: 'all' },
-  { label: 'Seeking OJT', value: 'intern' },
-  { label: 'Offering Internship', value: 'internship' },
+  { label: 'Looking for OJT', value: 'intern' },
+  { label: 'Accepting OJT Applicants', value: 'internship' },
 ];
 
 const VALID_TYPES = ['intern', 'internship'];
