@@ -48,13 +48,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!isOwner) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
 
     const body = await req.json();
+
+    // Admin-only: toggle hide/unhide
+    if (isAdmin && body.action === 'toggle-hide') {
+      const nowHidden = post.isActive !== false && post.status !== 'hidden';
+      const updated = await OjtWall.findByIdAndUpdate(
+        id,
+        { $set: { isActive: !nowHidden, status: nowHidden ? 'hidden' : 'unclaimed' } },
+        { new: true }
+      ).lean();
+      return NextResponse.json({ success: true, data: updated });
+    }
+
     const { title, description, skills, setup, location, allowance, slots, hoursRequired, deadline } = body;
     const isNativePost = (post.source === 'company' || post.source === 'student') && !post.SectionData?.fbleads?.name;
     const updateFields: Record<string, unknown> = {
       title, description, skills, setup, location, allowance, slots, hoursRequired,
       deadline: deadline ? new Date(deadline) : undefined,
     };
-    // Only update fbleads fields for scraped posts
     if (!isNativePost) {
       updateFields['SectionData.fbleads.post_text'] = description;
       updateFields['SectionData.fbleads.skills'] = Array.isArray(skills) ? skills.join(', ') : (skills || '');

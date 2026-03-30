@@ -65,14 +65,14 @@ export function PostCard({ post }: PostCardProps) {
       <div className="bg-white rounded-2xl border border-gray-200 p-5 flex flex-col gap-3 hover:shadow-md hover:border-gray-300 transition-all w-full">
         <div className="flex items-start gap-3">
           <Avatar name={post.postedByName} size="md" />
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-gray-900 text-sm truncate">{post.postedByName || 'Anonymous'}</p>
+          <div className="flex-1 min-w-0 flex flex-col gap-0.5 items-start">
+            <p className="font-semibold text-gray-900 text-sm truncate w-full">{post.postedByName || 'Anonymous'}</p>
+            <Badge label={isIntern ? 'Student Post' : 'Company Post'} variant={isIntern ? 'primary' : 'success'} />
             <div className="flex items-center gap-1 mt-0.5">
               <Calendar className="w-3 h-3 text-gray-400" />
               <span className="text-xs text-gray-400">{formatDate(post.createdAt)}</span>
             </div>
           </div>
-          <Badge label={isIntern ? 'Looking for OJT' : 'Accepting OJT Applicants'} variant={isIntern ? 'primary' : 'success'} />
         </div>
         {post.title && <p className="font-semibold text-gray-800 text-sm">{post.title}</p>}
         <p className="text-gray-500 text-xs leading-relaxed">{truncate(post.description || '', 200)}</p>
@@ -119,18 +119,19 @@ export function PostCard({ post }: PostCardProps) {
     <div className="bg-white rounded-2xl border border-gray-200 p-5 flex flex-col gap-3 hover:shadow-md hover:border-gray-300 transition-all w-full">
       <div className="flex items-start gap-3">
         <Avatar name={fb.name} src={fb.profile_pic} size="md" />
-        <div className="flex-1 min-w-0">
-          {fb.post_link || fb.fb_id ? (
-            <a href={fb.post_link || `https://www.facebook.com/${fb.fb_id}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-900 text-sm truncate hover:text-[#0F6E56] hover:underline block">{fb.name || 'Anonymous'}</a>
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5 items-start">
+          {/* fb.post_link || fb.fb_id ? (
+            <a href={fb.post_link || `https://www.facebook.com/${fb.fb_id}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-900 text-sm truncate hover:text-[#0F6E56] hover:underline w-full block">{fb.name || 'Anonymous'}</a>
           ) : (
-            <p className="font-semibold text-gray-900 text-sm truncate">{fb.name || 'Anonymous'}</p>
-          )}
+            <p className="font-semibold text-gray-900 text-sm truncate w-full">{fb.name || 'Anonymous'}</p>
+          ) */}
+          <p className="font-semibold text-gray-900 text-sm truncate w-full">{fb.name || 'Anonymous'}</p>
+          <Badge label={isIntern ? 'Student Post' : 'Company Post'} variant={isIntern ? 'primary' : 'success'} />
           <div className="flex items-center gap-1 mt-0.5">
             <Calendar className="w-3 h-3 text-gray-400" />
             <span className="text-xs text-gray-400">{formatDate(post.createdAt)}</span>
           </div>
         </div>
-        <Badge label={isIntern ? 'Looking for OJT' : 'Accepting OJT Applicants'} variant={isIntern ? 'primary' : 'success'} />
       </div>
       <p className="text-gray-500 text-xs leading-relaxed">{truncate(fb.post_text || '', 200)}</p>
       {skills.length > 0 && (

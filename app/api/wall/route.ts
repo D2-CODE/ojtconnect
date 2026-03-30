@@ -15,6 +15,8 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status');
     const source = searchParams.get('source');
     const mine = searchParams.get('mine') === 'true';
+    const showHidden = searchParams.get('showHidden') === 'true';
+    const hasContact = searchParams.get('hasContact') === 'true';
     let postedBy = searchParams.get('postedBy');
 
     let mineUserName: string | null = null;
@@ -35,8 +37,9 @@ export async function GET(req: NextRequest) {
     if (mine) {
       if (postedBy) andClauses.push({ postedBy });
       else if (mineUserName) andClauses.push({ postedByName: { $regex: mineUserName, $options: 'i' } });
-    } else {
       andClauses.push({ isActive: true });
+    } else {
+      if (!showHidden) andClauses.push({ isActive: true });
       if (postedBy) andClauses.push({ postedBy });
       if (source) andClauses.push({ source });
       if (type === 'intern' || type === 'internship') {
@@ -49,6 +52,15 @@ export async function GET(req: NextRequest) {
         });
       }
       if (status && status !== 'all') andClauses.push({ status });
+    }
+
+    if (hasContact) {
+      andClauses.push({
+        $or: [
+          { 'SectionData.fbleads.emails': { $exists: true, $ne: '' } },
+          { 'SectionData.fbleads.phones': { $exists: true, $ne: '' } },
+        ],
+      });
     }
 
     if (search) {

@@ -102,7 +102,7 @@ export default function AdminUsersPage() {
               </tbody>
             </table>
           </div>
-          <Pagination total={total} page={page} limit={limit} onPageChange={setPage} />
+          <div className="flex justify-center"><Pagination total={total} page={page} limit={limit} onPageChange={setPage} /></div>
         </>
       )}
     </div>

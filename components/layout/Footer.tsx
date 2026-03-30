@@ -43,7 +43,7 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold text-sm mb-3">Platform</h4>
             <ul className="flex flex-col gap-2 text-sm">
-              <li><Link href="/wall" className="hover:text-white transition-colors">OJT Wall</Link></li>
+              <li><Link href="/wall" className="hover:text-white transition-colors">Internship Wall</Link></li>
               <li><Link href="/register?type=university" className="hover:text-white transition-colors">Register University</Link></li>
               <li><Link href="/login" className="hover:text-white transition-colors">Sign In</Link></li>
             </ul>

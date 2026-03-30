@@ -47,7 +47,7 @@ export default async function HomePage() {
             Free for students and universities
           </div>
           <h1 className="text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
-            Find your OJT.<br />
+            Find your  Interns.<br />
             <span className="text-[#0F6E56]">Connect with companies.</span>
           </h1>
           <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-10">
@@ -58,7 +58,7 @@ export default async function HomePage() {
               Get started free <ArrowRight className="w-4 h-4" />
             </Link>
             <Link href="/wall" className="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-gray-50 transition-colors">
-              Browse OJT Wall
+              Browse Internship Wall
             </Link>
           </div>
         </div>
@@ -150,14 +150,14 @@ export default async function HomePage() {
           <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-6">
             <Users className="w-7 h-7 text-white" />
           </div>
-          <h2 className="text-4xl font-bold mb-4">Ready to find your OJT?</h2>
+          <h2 className="text-4xl font-bold mb-4">Ready to find your Interns?</h2>
           <p className="text-white/70 text-lg max-w-xl mx-auto mb-10">Join thousands of Filipino students already using OJT Connect PH. It&apos;s completely free.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/register" className="inline-flex items-center gap-2 bg-white text-[#0F6E56] font-semibold px-8 py-3.5 rounded-xl hover:bg-gray-50 transition-colors">
               Create free account <ArrowRight className="w-4 h-4" />
             </Link>
             <Link href="/wall" className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/20 transition-colors">
-              Browse OJT Wall
+              Browse Internship Wall
             </Link>
           </div>
         </div>

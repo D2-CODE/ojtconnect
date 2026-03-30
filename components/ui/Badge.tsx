@@ -29,6 +29,7 @@ export function getVerificationBadge(status: string) {
 }
 
 export function getLeadTypeBadge(type: string) {
-  if (type === 'intern') return <Badge label="Looking for OJT" variant="primary" />;
-  return <Badge label="Accepting OJT Applicants" variant="success" />;
+  if (type === 'intern') return <Badge label="Student Post" variant="primary" />;
+  return <Badge label="Company Post" variant="success" />;
 }
+  

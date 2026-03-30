@@ -14,6 +14,13 @@ import OjtWall from '@/models/OjtWall';
 import Company from '@/models/Company';
 import Student from '@/models/Student';
 import { auth } from '@/lib/auth';
+import mongoose, { Schema, Model } from 'mongoose';
+
+interface IContactUnlock { _id: string; companyProfileId: string; postId: string; }
+const ContactUnlockSchema = new Schema<IContactUnlock>({ _id: { type: String }, companyProfileId: { type: String }, postId: { type: String } }, { _id: false });
+const ContactUnlock: Model<IContactUnlock> =
+  (mongoose.models.ContactUnlock as Model<IContactUnlock>) ||
+  mongoose.model<IContactUnlock>('ContactUnlock', ContactUnlockSchema);
 
 async function getPost(id: string) {
   try {
@@ -39,6 +46,17 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
   const { id } = await params;
   const post = await getPost(id);
   const session = await auth();
+
+  // Check if current company has unlocked this post's contact
+  let isUnlocked = false;
+  if (session?.user?.roleName === 'company' && session.user.profileRef) {
+    await connectDB();
+    const unlock = await ContactUnlock.findOne({
+      companyProfileId: session.user.profileRef,
+      postId: id,
+    }).lean();
+    isUnlocked = !!unlock;
+  }
 
   if (!post) {
     return (
@@ -77,10 +95,17 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
             <div className="flex items-start gap-4 mb-6">
               <Avatar name={displayName} src={!isNativePost ? fb?.profile_pic : undefined} size="xl" />
               <div className="flex-1">
-                <h1 className="text-2xl font-bold text-gray-900">{isNativePost ? (post.title || displayName) : fb?.post_link || fb?.fb_id ? <a href={fb?.post_link || `https://www.facebook.com/${fb?.fb_id}`} target="_blank" rel="noopener noreferrer" className="hover:text-[#0F6E56] hover:underline">{displayName || 'Anonymous'}</a> : (displayName || 'Anonymous')}</h1>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {isNativePost
+                    ? (post.title || displayName)
+                    : (isUnlocked && (fb?.post_link || fb?.fb_id))
+                      ? <a href={fb?.post_link || `https://www.facebook.com/${fb?.fb_id}`} target="_blank" rel="noopener noreferrer" className="hover:text-[#0F6E56] hover:underline">{displayName || 'Anonymous'}</a>
+                      : (displayName || 'Anonymous')
+                  }
+                </h1>
                 {isNativePost && post.title && <p className="text-gray-500 text-sm mt-0.5">{displayName}</p>}
                 <div className="flex items-center gap-3 mt-2 flex-wrap">
-                  <Badge label={isIntern ? 'Looking for OJT' : 'Accepting OJT Applicants'} variant={isIntern ? 'primary' : 'success'} />
+                  <Badge label={isIntern ? 'Student Post' : 'Company Post'} variant={isIntern ? 'primary' : 'success'} />
                   {isNativePost && <Badge label="Direct Post" variant="success" />}
                   {isNativePost && isIntern && (post as {isStudentVerified?: boolean}).isStudentVerified && (
                     <Badge label="University Verified" variant="primary" />
