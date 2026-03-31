@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { SkillTag } from '@/components/ui/SkillTag';
 import { useToast } from '@/components/ui/Toast';
-import { FileText, Search, Eye, Pencil, Trash2, Lock, LockOpen } from 'lucide-react';
+import { FileText, Search, Eye, Pencil, Trash2, Lock, LockOpen, RefreshCw } from 'lucide-react';
 import { truncate, formatDate } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -198,21 +198,52 @@ export default function AdminPostsPage() {
       showToast('Type updated', 'success');
       setPosts((prev) => prev.map((p) =>
         p._id === id
-          ? { ...p, source: newSource, SectionData: { ...p.SectionData, fbleads: { ...p.SectionData?.fbleads, lead_type: newType } } }
+          ? {
+              ...p,
+              source: newSource,
+              SectionData: p.SectionData
+                ? { ...p.SectionData, fbleads: p.SectionData.fbleads ? { ...p.SectionData.fbleads, lead_type: newType } : p.SectionData.fbleads }
+                : p.SectionData,
+            }
           : p
       ));
     } else showToast(d.error || 'Failed', 'error');
   };
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [reclassifying, setReclassifying] = useState(false);
+
+  const handleReclassify = async () => {
+    setReclassifying(true);
+    try {
+      const res = await fetch('/api/wall', { method: 'PUT' });
+      const d = await res.json();
+      if (d.success) {
+        showToast(`Done! ${d.changed} of ${d.total} posts reclassified.`, 'success');
+        load();
+      } else showToast(d.error || 'Failed', 'error');
+    } finally {
+      setReclassifying(false);
+    }
+  };
 
   const isCompanyPost = editPost?.source === 'company' || editPost?.SectionData?.fbleads?.lead_type === 'internship';
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Wall Posts</h1>
-        <p className="text-gray-500 text-sm mt-1">Manage all OJT wall posts.</p>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Wall Posts</h1>
+          <p className="text-gray-500 text-sm mt-1">Manage all OJT wall posts.</p>
+        </div>
+        <button
+          onClick={handleReclassify}
+          disabled={reclassifying}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-[#0F6E56] text-[#0F6E56] rounded-xl hover:bg-[#E8F5F1] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RefreshCw className={`w-4 h-4 ${reclassifying ? 'animate-spin' : ''}`} />
+          {reclassifying ? 'Reclassifying...' : 'Auto-Reclassify Posts'}
+        </button>
       </div>
 
       <div className="mb-4 relative">
@@ -250,8 +281,8 @@ export default function AdminPostsPage() {
                 {posts.map((p, i) => {
                   const fb = p.SectionData?.fbleads;
                   const isNative = p.source === 'company' || p.source === 'student';
-                  const displayName = isNative ? p.postedByName : fb?.name;
-                  const displayText = isNative ? p.description : fb?.post_text;
+                  const displayName = isNative ? (p.postedByName || fb?.name) : fb?.name;
+                  const displayText = p.description || p.title || fb?.post_text || '';
                   const leadType = isNative ? (p.source === 'student' ? 'intern' : 'internship') : fb?.lead_type;
                   const isHidden = p.isActive === false || p.status === 'hidden';
                   return (
@@ -259,9 +290,9 @@ export default function AdminPostsPage() {
                       <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{displayName || 'Anonymous'}</td>
                       <td className="px-4 py-3 text-gray-500 text-xs max-w-xs">
                         {(() => {
-                          const fullText = isNative
+                          const fullText = isNative && (p.title || p.description)
                             ? [p.title, p.description].filter(Boolean).join(' — ')
-                            : (fb?.post_text || '');
+                            : (fb?.post_text || p.description || p.title || '');
                           const isExpanded = expandedId === p._id;
                           const SHORT = 80;
                           if (fullText.length <= SHORT) return <span>{fullText}</span>;
