@@ -89,13 +89,13 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
           <ArrowLeft className="w-4 h-4" /> Back to Wall
         </Link>
 
-        <div className="flex gap-8 items-start">
+        <div className="flex flex-col xl:flex-row gap-6 xl:gap-8 items-start">
           {/* Main */}
-          <div className="flex-1 bg-white rounded-2xl border border-gray-200 p-8">
-            <div className="flex items-start gap-4 mb-6">
+          <div className="flex-1 w-full bg-white rounded-2xl border border-gray-200 p-5 sm:p-8">
+            <div className="flex items-start gap-3 sm:gap-4 mb-6">
               <Avatar name={displayName} src={!isNativePost ? fb?.profile_pic : undefined} size="xl" />
-              <div className="flex-1">
-                <h1 className="text-2xl font-bold text-gray-900">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900 break-words">
                   {isNativePost
                     ? (post.title || displayName)
                     : (isUnlocked && (fb?.post_link || fb?.fb_id))
@@ -103,8 +103,8 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                       : (displayName || 'Anonymous')
                   }
                 </h1>
-                {isNativePost && post.title && <p className="text-gray-500 text-sm mt-0.5">{displayName}</p>}
-                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                {isNativePost && post.title && <p className="text-gray-500 text-sm mt-0.5 truncate">{displayName}</p>}
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
                   <Badge label={isIntern ? 'Student Post' : 'Company Post'} variant={isIntern ? 'primary' : 'success'} />
                   {isNativePost && <Badge label="Direct Post" variant="success" />}
                   {isNativePost && isIntern && (post as {isStudentVerified?: boolean}).isStudentVerified && (
@@ -127,13 +127,13 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
             )}
 
             {isNativePost && (
-              <div className="flex flex-wrap gap-4 mb-6 text-sm text-gray-600">
-                {post.setup && <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4 text-gray-400" /><strong>Setup:</strong> {post.setup}</span>}
-                {post.location && <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-gray-400" /><strong>Location:</strong> {post.location}</span>}
-                {post.slots && <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-gray-400" /><strong>Slots:</strong> {post.slots}</span>}
-                {post.allowance && <span className="flex items-center gap-1.5"><Banknote className="w-4 h-4 text-gray-400" /><strong>Allowance:</strong> {post.allowance}</span>}
-                {post.hoursRequired && <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-gray-400" /><strong>Hours:</strong> {post.hoursRequired}</span>}
-                {post.deadline && <span className="flex items-center gap-1.5"><AlarmClock className="w-4 h-4 text-gray-400" /><strong>Deadline:</strong> {new Date(post.deadline).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 text-sm text-gray-600">
+                {post.setup && <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4 text-gray-400 flex-shrink-0" /><strong>Setup:</strong> {post.setup}</span>}
+                {post.location && <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" /><strong>Location:</strong> {post.location}</span>}
+                {post.slots && <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-gray-400 flex-shrink-0" /><strong>Slots:</strong> {post.slots}</span>}
+                {post.allowance && <span className="flex items-center gap-1.5"><Banknote className="w-4 h-4 text-gray-400 flex-shrink-0" /><strong>Allowance:</strong> {post.allowance}</span>}
+                {post.hoursRequired && <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-gray-400 flex-shrink-0" /><strong>Hours:</strong> {post.hoursRequired}</span>}
+                {post.deadline && <span className="flex items-center gap-1.5"><AlarmClock className="w-4 h-4 text-gray-400 flex-shrink-0" /><strong>Deadline:</strong> {new Date(post.deadline).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>}
               </div>
             )}
 
@@ -149,7 +149,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
           </div>
 
           {/* Sidebar */}
-          <aside className="w-72 flex-shrink-0 flex flex-col gap-4">
+          <aside className="w-full xl:w-72 xl:flex-shrink-0 flex flex-col gap-4">
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900">Contact Information</h3>

@@ -91,15 +91,17 @@ function WallContent() {
   return (
     <>
       {/* Filters */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center">
-        <Tabs tabs={TABS} activeTab={activeTab} onTabChange={(v) => {
-          setActiveTab(v);
-          setPage(1);
-          const params = new URLSearchParams(searchParams.toString());
-          if (v === 'all') params.delete('type'); else params.set('type', v);
-          router.push(`/wall?${params}`);
-        }} />
-        <div className="flex-1 relative max-w-md">
+      <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-6 flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center">
+        <div className="w-full overflow-x-auto pb-1 md:w-auto md:flex-1">
+          <Tabs tabs={TABS} activeTab={activeTab} onTabChange={(v) => {
+            setActiveTab(v);
+            setPage(1);
+            const params = new URLSearchParams(searchParams.toString());
+            if (v === 'all') params.delete('type'); else params.set('type', v);
+            router.push(`/wall?${params}`);
+          }} />
+        </div>
+        <div className="relative w-full md:max-w-md md:flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -109,22 +111,24 @@ function WallContent() {
             className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0F6E56]/20 focus:border-[#0F6E56]"
           />
         </div>
-        <div className="relative" ref={filterRef}>
+        <div className="relative w-full md:w-auto" ref={filterRef}>
           <button
             onClick={() => setFilterOpen(o => !o)}
-            className={`flex items-center gap-2 px-3 py-2.5 text-sm border rounded-[10px] transition-colors ${
+            className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-sm border rounded-[10px] transition-colors md:w-auto md:justify-start ${
               hasContact
                 ? 'border-[#0F6E56] bg-[#E8F5F1] text-[#0F6E56] font-medium'
                 : 'border-gray-300 text-gray-600 hover:border-gray-400'
             }`}
           >
-            <SlidersHorizontal className="w-4 h-4" />
-            Filters
-            {hasContact && <span className="bg-[#0F6E56] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">1</span>}
-            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
+            <span className="flex items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4" />
+              Filters
+              {hasContact && <span className="bg-[#0F6E56] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">1</span>}
+            </span>
+            <ChevronDown className={`w-3.5 h-3.5 flex-shrink-0 transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
           </button>
           {filterOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-20 p-3">
+            <div className="absolute left-0 right-0 top-full mt-2 w-full min-w-0 bg-white border border-gray-200 rounded-xl shadow-lg z-20 p-3 md:left-auto md:right-0 md:w-56">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Filters</span>
                 {hasContact && (
@@ -157,7 +161,7 @@ function WallContent() {
             </div>
           )}
         </div>
-        <span className="text-sm text-gray-500">{total} posts</span>
+        <span className="text-sm text-gray-500 md:ml-auto">{total} posts</span>
       </div>
 
       <div className="flex gap-8">
