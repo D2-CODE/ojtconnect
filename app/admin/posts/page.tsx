@@ -40,8 +40,8 @@ const TABS = [
   { value: 'internship', label: 'Company Post' },
   { value: 'claimed', label: 'Claimed' },
   { value: 'hidden', label: 'Hidden' },
-  { value: 'company', label: 'Company Posts' },
-  { value: 'student', label: 'Student Posts' },
+  { value: 'company', label: 'Company Claimed' },
+  { value: 'student', label: 'Student Claimed' },
 ];
 
 const SETUP_OPTIONS = [
