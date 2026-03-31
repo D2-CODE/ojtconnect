@@ -13,7 +13,7 @@ type ProfileType = 'student' | 'company' | 'university';
 const ACCOUNT_TYPES = [
   { type: 'student' as ProfileType, icon: GraduationCap, title: 'Student', desc: 'Seeking OJT or internship' },
   { type: 'company' as ProfileType, icon: Building2, title: 'Company', desc: 'Offering internship positions' },
-  { type: 'university' as ProfileType, icon: University, title: 'University', desc: 'Verify and manage students' },
+  { type: 'university' as ProfileType, icon: University, title: 'School', desc: 'Verify and manage students' },
 ];
 
 const YEAR_OPTIONS = [1, 2, 3, 4, 5].map((y) => ({ value: String(y), label: `${y}${y === 1 ? 'st' : y === 2 ? 'nd' : y === 3 ? 'rd' : 'th'} Year` }));
@@ -132,7 +132,7 @@ export default function RegisterPage() {
         <h2 className="text-4xl font-bold mb-4">Join the community</h2>
         <p className="text-white/70 text-lg mb-8">Create your free account and start connecting with internship opportunities today.</p>
         <div className="space-y-4">
-          {['Free for students and universities', 'Verified university credentials', 'Direct email connections', 'Scraped from Facebook groups'].map((item) => (
+          {['Free for students and Schools', 'Verified school credentials', 'Direct email connections', 'Scraped from Facebook groups'].map((item) => (
             <div key={item} className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                 <div className="w-2 h-2 rounded-full bg-white" />
@@ -189,7 +189,7 @@ export default function RegisterPage() {
                 </button>
 
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                  {profileType === 'student' ? 'Student Registration' : profileType === 'company' ? 'Company Registration' : 'University Registration'}
+                  {profileType === 'student' ? 'Student Registration' : profileType === 'company' ? 'Company Registration' : 'School Registration'}
                 </h1>
                 <p className="text-gray-500 mb-6 text-sm">Fill in your details to create your account</p>
 
@@ -296,9 +296,9 @@ export default function RegisterPage() {
                   )}
                   {profileType === 'university' && (
                     <>
-                      <Input label="University Name" value={form.universityName} onChange={(e) => set('universityName', e.target.value)} placeholder="University of the Philippines" required />
+                      <Input label="School Name" value={form.universityName} onChange={(e) => set('universityName', e.target.value)} placeholder="School of the Philippines" required />
                       <Input label="Location" value={form.location} onChange={(e) => set('location', e.target.value)} placeholder="Quezon City, Metro Manila" />
-                      <Input label="Website" value={form.website} onChange={(e) => set('website', e.target.value)} placeholder="https://university.edu.ph" />
+                      <Input label="Website" value={form.website} onChange={(e) => set('website', e.target.value)} placeholder="https://School.edu.ph" />
                     </>
                   )}
 

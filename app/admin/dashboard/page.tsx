@@ -30,7 +30,7 @@ export default function AdminDashboardPage() {
 
   const cards = [
     { icon: Users, label: 'Total Users', value: stats?.users || 0, sub: null, href: '/admin/users', color: 'text-blue-500 bg-blue-50' },
-    { icon: University, label: 'Universities', value: stats?.universities || 0, sub: stats?.pendingUniversities ? `${stats.pendingUniversities} pending` : null, href: '/admin/universities', color: 'text-purple-500 bg-purple-50' },
+    { icon: University, label: 'Schools', value: stats?.universities || 0, sub: stats?.pendingUniversities ? `${stats.pendingUniversities} pending` : null, href: '/admin/universities', color: 'text-purple-500 bg-purple-50' },
     { icon: Building2, label: 'Companies', value: stats?.companies || 0, sub: null, href: '/admin/users', color: 'text-[#0F6E56] bg-[#E8F5F1]' },
     { icon: Users, label: 'Students', value: stats?.students || 0, sub: stats?.pendingStudents ? `${stats.pendingStudents} pending` : null, href: '/admin/users', color: 'text-indigo-500 bg-indigo-50' },
     { icon: FileText, label: 'Wall Posts', value: stats?.wallPosts || 0, sub: null, href: '/admin/posts', color: 'text-orange-500 bg-orange-50' },

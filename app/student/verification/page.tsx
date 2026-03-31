@@ -43,10 +43,10 @@ export default function VerificationPage() {
   const status = profile?.universityVerificationStatus || 'unverified';
 
   const statusConfig = {
-    verified: { icon: CheckCircle, color: 'text-[#0F6E56]', bg: 'bg-[#E8F5F1]', label: 'Verified', desc: 'Your profile is verified by your university. Companies can see your verified badge.' },
-    pending: { icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50', label: 'Pending', desc: 'Your verification request is under review by your university admin.' },
+    verified: { icon: CheckCircle, color: 'text-[#0F6E56]', bg: 'bg-[#E8F5F1]', label: 'Verified', desc: 'Your profile is verified by your School. Companies can see your verified badge.' },
+    pending: { icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50', label: 'Pending', desc: 'Your verification request is under review by your School admin.' },
     rejected: { icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', label: 'Rejected', desc: profile?.verificationNote || 'Your verification was not approved. You may resubmit.' },
-    unverified: { icon: GraduationCap, color: 'text-gray-400', bg: 'bg-gray-50', label: 'Not verified', desc: 'Submit a verification request to your university admin.' },
+    unverified: { icon: GraduationCap, color: 'text-gray-400', bg: 'bg-gray-50', label: 'Not verified', desc: 'Submit a verification request to your School admin.' },
   }[status] || { icon: GraduationCap, color: 'text-gray-400', bg: 'bg-gray-50', label: 'Not verified', desc: 'Submit a verification request.' };
 
   const StatusIcon = statusConfig.icon;
@@ -54,8 +54,8 @@ export default function VerificationPage() {
   return (
     <div className="p-6 max-w-xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">University Verification</h1>
-        <p className="text-gray-500 text-sm mt-1">Get verified by your university to boost your credibility.</p>
+        <h1 className="text-2xl font-bold text-gray-900">School Verification</h1>
+        <p className="text-gray-500 text-sm mt-1">Get verified by your school to boost your credibility.</p>
       </div>
 
       <div className={`${statusConfig.bg} rounded-2xl p-6 mb-6 flex items-start gap-4`}>
@@ -74,7 +74,7 @@ export default function VerificationPage() {
       {!profile?.universityId && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-amber-700">You must set your university in your profile before requesting verification.</p>
+          <p className="text-sm text-amber-700">You must set your School in your profile before requesting verification.</p>
         </div>
       )}
 
@@ -83,9 +83,9 @@ export default function VerificationPage() {
         <div className="space-y-3">
           {[
             'Complete your student profile with your course and year level',
-            'Make sure your university is set in your profile',
+            'Make sure your School is set in your profile',
             'Submit a verification request',
-            'Your university admin will review and approve',
+            'Your school admin will review and approve',
             'Verified badge appears on your public profile',
           ].map((step, i) => (
             <div key={i} className="flex items-start gap-3 text-sm text-gray-600">

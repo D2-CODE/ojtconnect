@@ -75,7 +75,7 @@ export default function UniversityStudentsPage() {
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Students</h1>
-        <p className="text-gray-500 text-sm mt-1">Verify and manage your university students.</p>
+        <p className="text-gray-500 text-sm mt-1">Verify and manage your School students.</p>
       </div>
 
       <div className="mb-4 relative">

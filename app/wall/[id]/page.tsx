@@ -108,7 +108,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                   <Badge label={isIntern ? 'Student Post' : 'Company Post'} variant={isIntern ? 'primary' : 'success'} />
                   {isNativePost && <Badge label="Direct Post" variant="success" />}
                   {isNativePost && isIntern && (post as {isStudentVerified?: boolean}).isStudentVerified && (
-                    <Badge label="University Verified" variant="primary" />
+                    <Badge label="School Verified" variant="primary" />
                   )}
                   {!isNativePost && post.status === 'claimed' && <Badge label="Claimed" variant="success" />}
                   {date && (

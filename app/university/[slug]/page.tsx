@@ -35,7 +35,7 @@ export default async function UniversityPage({ params }: { params: Promise<{ slu
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">University not found</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">School not found</h2>
             <Link href="/universities"><Button variant="primary">Back to Universities</Button></Link>
           </div>
         </div>

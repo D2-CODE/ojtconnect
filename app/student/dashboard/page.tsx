@@ -95,7 +95,7 @@ export default function StudentDashboardPage() {
         <div className="bg-[#E8F5F1] border border-[#0F6E56]/20 rounded-xl p-4 mb-6 flex items-center gap-3">
           <CheckCircle className="w-5 h-5 text-[#0F6E56] flex-shrink-0" />
           <div className="flex-1">
-            <p className="font-medium text-[#0F6E56] text-sm">Get university verified</p>
+            <p className="font-medium text-[#0F6E56] text-sm">Get School verified</p>
             <p className="text-gray-600 text-xs mt-0.5">Verification increases your profile&apos;s credibility with companies.</p>
           </div>
           <Link href="/student/verification"><Button variant="primary" className="flex-shrink-0 text-xs px-3 py-1.5 h-auto">Request</Button></Link>
@@ -114,7 +114,7 @@ export default function StudentDashboardPage() {
         <Link href="/student/wall" className="bg-white rounded-xl border border-gray-200 p-5 hover:border-[#0F6E56] transition-colors flex items-center justify-between group">
           <div>
             <h3 className="font-semibold text-gray-900">My OJT Posts</h3>
-            <p className="text-sm text-gray-500 mt-0.5">{verificationStatus === 'verified' ? 'Post your availability for companies' : 'Requires university verification'}</p>
+            <p className="text-sm text-gray-500 mt-0.5">{verificationStatus === 'verified' ? 'Post your availability for companies' : 'Requires School verification'}</p>
           </div>
           <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#0F6E56]" />
         </Link>

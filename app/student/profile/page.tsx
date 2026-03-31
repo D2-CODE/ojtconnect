@@ -114,17 +114,17 @@ export default function StudentProfilePage() {
         <Input label="Course / Program" value={form.course} onChange={(e) => set('course', e.target.value)} placeholder="BS Computer Science" />
         <Select label="Year Level" value={String(form.yearLevel)} onChange={(e) => set('yearLevel', Number(e.target.value))} options={YEAR_OPTIONS} />
 
-        {/* University selector */}
+        {/* School selector */}
         <div className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4" /> University <span className="text-red-500">*</span></span>
+            <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4" /> School <span className="text-red-500">*</span></span>
           </label>
           <div
             className="w-full border border-gray-300 rounded-xl px-3.5 py-3 text-sm cursor-pointer flex items-center justify-between focus-within:ring-2 focus-within:ring-[#0F6E56] focus-within:border-[#0F6E56]"
             onClick={() => setShowUniDropdown((v) => !v)}
           >
             <span className={selectedUniName ? 'text-gray-900' : 'text-gray-400'}>
-              {selectedUniName || 'Search and select your university...'}
+              {selectedUniName || 'Search and select your school...'}
             </span>
             <span className="text-gray-400 text-xs">▼</span>
           </div>
@@ -134,14 +134,14 @@ export default function StudentProfilePage() {
                 <input
                   autoFocus
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F6E56]"
-                  placeholder="Search university..."
+                  placeholder="Search school..."
                   value={uniSearch}
                   onChange={(e) => setUniSearch(e.target.value)}
                 />
               </div>
               <div className="max-h-48 overflow-y-auto">
                 {filteredUnis.length === 0 ? (
-                  <p className="text-sm text-gray-400 text-center py-4">No universities found</p>
+                  <p className="text-sm text-gray-400 text-center py-4">No schools found</p>
                 ) : filteredUnis.map((u) => (
                   <button
                     key={u._id}

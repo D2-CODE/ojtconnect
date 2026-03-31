@@ -26,9 +26,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const uni = await University.findByIdAndUpdate(id, update, { new: true }).lean();
-    if (!uni) return NextResponse.json({ success: false, error: 'University not found' }, { status: 404 });
+    if (!uni) return NextResponse.json({ success: false, error: 'School not found' }, { status: 404 });
 
-    // Send email to the university admin
+    // Send email to the school admin
     if (action === 'verify' || action === 'reject') {
       const adminUser = await User.findById(uni.userId).lean<{ email: string; name: string }>();
       const adminEmail = adminUser?.email || uni.email;

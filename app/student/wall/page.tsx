@@ -191,17 +191,17 @@ export default function StudentWallPage() {
       {isVerified ? (
         <div className="bg-[#E8F5F1] border border-[#0F6E56]/20 rounded-xl p-3 mb-6 flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-[#0F6E56]" />
-          <span className="text-sm text-[#0F6E56] font-medium">University verified — your posts show a verified badge</span>
+          <span className="text-sm text-[#0F6E56] font-medium">School verified — your posts show a verified badge</span>
         </div>
       ) : verificationStatus === 'pending' ? (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-6 flex items-center gap-2">
           <Clock className="w-4 h-4 text-amber-500" />
-          <span className="text-sm text-amber-700">Verification pending — get verified to show a university badge on your posts. <Link href="/student/verification" className="font-medium underline">Check status</Link></span>
+          <span className="text-sm text-amber-700">Verification pending — get verified to show a School badge on your posts. <Link href="/student/verification" className="font-medium underline">Check status</Link></span>
         </div>
       ) : (
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mb-6 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-gray-400" />
-          <span className="text-sm text-gray-500">Get university verified to show a verified badge on your posts. <Link href="/student/verification" className="font-medium text-[#0F6E56] hover:underline">Request verification</Link></span>
+          <span className="text-sm text-gray-500">Get School verified to show a verified badge on your posts. <Link href="/student/verification" className="font-medium text-[#0F6E56] hover:underline">Request verification</Link></span>
         </div>
       )}
 

@@ -108,7 +108,7 @@ export default function LoginPage() {
         <h2 className="text-4xl font-bold mb-4 leading-tight">Connect. Learn.<br />Grow.</h2>
         <p className="text-white/70 text-lg leading-relaxed mb-10">The free platform connecting Filipino students with internship opportunities across the Philippines.</p>
         <div className="grid grid-cols-2 gap-4">
-          {[['2,500+', 'Active Interns'], ['850+', 'Companies'], ['120+', 'Universities'], ['100%', 'Free']].map(([v, l]) => (
+          {[['2,500+', 'Active Interns'], ['850+', 'Companies'], ['120+', 'Schools'], ['100%', 'Free']].map(([v, l]) => (
             <div key={l} className="bg-white/10 rounded-xl p-4">
               <div className="text-2xl font-bold">{v}</div>
               <div className="text-white/70 text-sm">{l}</div>

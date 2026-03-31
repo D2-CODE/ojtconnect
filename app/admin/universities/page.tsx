@@ -52,7 +52,7 @@ export default function AdminUniversitiesPage() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Universities</h1>
-        <p className="text-gray-500 text-sm mt-1">Verify and manage university accounts.</p>
+        <p className="text-gray-500 text-sm mt-1">Verify and manage School accounts.</p>
       </div>
 
       <div className="mb-4 relative">

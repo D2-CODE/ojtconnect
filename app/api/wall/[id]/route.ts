@@ -60,6 +60,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ success: true, data: updated });
     }
 
+    // Admin-only: change post type
+    if (isAdmin && body.action === 'change-type') {
+      const updated = await OjtWall.findByIdAndUpdate(
+        id,
+        { $set: { source: body.source, 'SectionData.fbleads.lead_type': body.leadType } },
+        { new: true }
+      ).lean();
+      return NextResponse.json({ success: true, data: updated });
+    }
+
     const { title, description, skills, setup, location, allowance, slots, hoursRequired, deadline } = body;
     const isNativePost = (post.source === 'company' || post.source === 'student') && !post.SectionData?.fbleads?.name;
     const updateFields: Record<string, unknown> = {

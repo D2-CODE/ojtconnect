@@ -14,7 +14,7 @@ const navItems: Record<Role, NavItem[]> = {
     { label: 'Browse Wall', href: '/wall', icon: Search },
     { label: 'My OJT Posts', href: '/student/wall', icon: Newspaper },
     { label: 'My Profile', href: '/student/profile', icon: User },
-    { label: 'University Verification', href: '/student/verification', icon: GraduationCap },
+    { label: 'School Verification', href: '/student/verification', icon: GraduationCap },
     { label: 'Connections', href: '/student/connections', icon: Users },
   ],
   company: [
@@ -27,12 +27,12 @@ const navItems: Record<Role, NavItem[]> = {
   university_admin: [
     { label: 'Dashboard', href: '/university-admin/dashboard', icon: LayoutDashboard },
     { label: 'Students', href: '/university-admin/students', icon: Users },
-    { label: 'University Profile', href: '/university-admin/profile', icon: Building2 },
+    { label: 'School Profile', href: '/university-admin/profile', icon: Building2 },
     { label: 'Preview Public Page', href: '/university-admin/preview', icon: Eye },
   ],
   super_admin: [
     { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-    { label: 'Universities', href: '/admin/universities', icon: Building2 },
+    { label: 'Schools', href: '/admin/universities', icon: Building2 },
     { label: 'Users', href: '/admin/users', icon: Users },
     { label: 'Posts', href: '/admin/posts', icon: FileText },
     { label: 'Email Logs', href: '/admin/email-logs', icon: Mail },

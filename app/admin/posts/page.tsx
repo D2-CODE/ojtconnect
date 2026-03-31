@@ -186,6 +186,26 @@ export default function AdminPostsPage() {
     }
   };
 
+  const changeType = async (id: string, newType: 'intern' | 'internship') => {
+    const newSource = newType === 'intern' ? 'student' : 'company';
+    const res = await fetch(`/api/wall/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'change-type', source: newSource, leadType: newType }),
+    });
+    const d = await res.json();
+    if (d.success) {
+      showToast('Type updated', 'success');
+      setPosts((prev) => prev.map((p) =>
+        p._id === id
+          ? { ...p, source: newSource, SectionData: { ...p.SectionData, fbleads: { ...p.SectionData?.fbleads, lead_type: newType } } }
+          : p
+      ));
+    } else showToast(d.error || 'Failed', 'error');
+  };
+
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   const isCompanyPost = editPost?.source === 'company' || editPost?.SectionData?.fbleads?.lead_type === 'internship';
 
   return (
@@ -219,7 +239,7 @@ export default function AdminPostsPage() {
                 <tr className="border-b border-gray-100 bg-gray-50">
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Name</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Post</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Source</th>
+                  {/* <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Source</th> */}
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Type</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Status</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Date</th>
@@ -237,9 +257,38 @@ export default function AdminPostsPage() {
                   return (
                     <tr key={p._id} className={`border-b border-gray-100 ${isHidden ? 'opacity-50 bg-red-50/30' : i % 2 === 0 ? '' : 'bg-gray-50/50'}`}>
                       <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{displayName || 'Anonymous'}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs max-w-xs">{truncate(isNative ? (p.title || displayText || '') : (displayText || ''), 80)}</td>
-                      <td className="px-4 py-3"><Badge label={p.source || 'scraped'} variant={isNative ? 'success' : 'neutral'} /></td>
-                      <td className="px-4 py-3"><Badge label={leadType === 'intern' ? 'Student Post' : 'Company Post'} variant={leadType === 'intern' ? 'primary' : 'success'} /></td>
+                      <td className="px-4 py-3 text-gray-500 text-xs max-w-xs">
+                        {(() => {
+                          const fullText = isNative
+                            ? [p.title, p.description].filter(Boolean).join(' — ')
+                            : (fb?.post_text || '');
+                          const isExpanded = expandedId === p._id;
+                          const SHORT = 80;
+                          if (fullText.length <= SHORT) return <span>{fullText}</span>;
+                          return (
+                            <span>
+                              {isExpanded ? fullText : fullText.slice(0, SHORT) + '...'}
+                              <button
+                                onClick={() => setExpandedId(isExpanded ? null : p._id)}
+                                className="ml-1 text-[#0F6E56] font-medium hover:underline whitespace-nowrap"
+                              >
+                                {isExpanded ? 'read less' : 'read more'}
+                              </button>
+                            </span>
+                          );
+                        })()}
+                      </td>
+                      {/* <td className="px-4 py-3"><Badge label={p.source || 'scraped'} variant={isNative ? 'success' : 'neutral'} /></td> */}
+                      <td className="px-4 py-3">
+                        <select
+                          value={leadType === 'intern' ? 'intern' : 'internship'}
+                          onChange={(e) => changeType(p._id, e.target.value as 'intern' | 'internship')}
+                          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#0F6E56]/20 focus:border-[#0F6E56] bg-white cursor-pointer"
+                        >
+                          <option value="intern">Student Post</option>
+                          <option value="internship">Company Post</option>
+                        </select>
+                      </td>
                       <td className="px-4 py-3"><Badge label={p.status || 'active'} variant={p.status === 'claimed' ? 'success' : p.status === 'hidden' ? 'warning' : 'neutral'} /></td>
                       <td className="px-4 py-3 text-gray-400 text-xs">{formatDate(p.createdAt)}</td>
                       <td className="px-4 py-3">

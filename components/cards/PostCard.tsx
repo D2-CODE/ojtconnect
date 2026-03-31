@@ -74,7 +74,7 @@ export function PostCard({ post }: PostCardProps) {
             </div>
           </div>
         </div>
-        {post.title && <p className="font-semibold text-gray-800 text-sm">{post.title}</p>}
+        {post.title && <p className=" text-gray-500 text-sm">{post.title}</p>}
         <p className="text-gray-500 text-xs leading-relaxed">{truncate(post.description || '', 200)}</p>
         {skills.length > 0 && (
           <div className="flex flex-wrap gap-1.5">

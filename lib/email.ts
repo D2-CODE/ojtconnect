@@ -193,7 +193,7 @@ export async function sendWelcomeEmail(
       subject: `${firstName}, your OJT Connect PH account is ready`,
       headline: `Welcome aboard, ${firstName}!`,
       body: `Your student account has been created. You can now browse internship opportunities on the OJT Wall, get university-verified, and connect directly with companies looking for OJT candidates.`,
-      steps: ['Complete your student profile with your course and skills', 'Set your university and request verification', 'Browse the OJT Wall and connect with companies'],
+      steps: ['Complete your student profile with your course and skills', 'Set your School and request verification', 'Browse the OJT Wall and connect with companies'],
       cta: `${appUrl}/student/dashboard`,
       ctaLabel: 'Go to My Dashboard',
     },
@@ -206,10 +206,10 @@ export async function sendWelcomeEmail(
       ctaLabel: 'Set Up My Company Profile',
     },
     university: {
-      subject: `${firstName}, your university account is pending verification`,
+      subject: `${firstName}, your School account is pending verification`,
       headline: `Thanks for registering, ${firstName}!`,
-      body: `Your university account has been submitted and is currently under review by our admin team. Once verified, your students will be able to request university verification through your dashboard.`,
-      steps: ['Wait for admin verification (usually within 24 hours)', 'Complete your university profile', 'Start verifying your students'],
+      body: `Your School account has been submitted and is currently under review by our admin team. Once verified, your students will be able to request university verification through your dashboard.`,
+      steps: ['Wait for admin verification (usually within 24 hours)', 'Complete your School profile', 'Start verifying your students'],
       cta: `${appUrl}/university-admin/dashboard`,
       ctaLabel: 'View My Dashboard',
     },
@@ -401,7 +401,7 @@ export async function sendStudentVerifiedEmail(
 }
 
 // ---------------------------------------------------------------------------
-// 7. University verification result
+// 7. School verification result
 // ---------------------------------------------------------------------------
 export async function sendUniversityVerifiedEmail(
   to: string,
@@ -431,9 +431,9 @@ export async function sendUniversityVerifiedEmail(
     `
     : `
       ${h1(`Update on ${uniName}'s verification`)}
-      ${p(`Hi ${firstName}, your university verification request was not approved at this time.`)}
+      ${p(`Hi ${firstName}, your School verification request was not approved at this time.`)}
       ${reason ? infoBox([{ label: 'Reason', value: reason }]) : ''}
-      ${p(`Please review the feedback, update your university profile, and resubmit for verification.`)}
+      ${p(`Please review the feedback, update your School profile, and resubmit for verification.`)}
       ${btn(`${appUrl}/university-admin/profile`, 'Update Profile')}
       ${divider()}
       ${p(`Need help? Reply to this email and our team will assist you.`, 'font-size:13px;color:#6b7280')}

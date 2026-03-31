@@ -184,9 +184,9 @@ function WallContent() {
         <aside className="hidden xl:flex flex-col gap-4 w-64 flex-shrink-0">
           <PostListingWidget />
           <div className="bg-white border border-gray-200 rounded-2xl p-5">
-            <h3 className="font-semibold text-gray-900 mb-2">Are you a university?</h3>
-            <p className="text-sm text-gray-500 mb-4">Register your university to verify your students and boost their credibility.</p>
-            <Link href="/register?type=university" className="block border border-[#0F6E56] text-[#0F6E56] text-sm font-semibold text-center py-2.5 rounded-[10px] hover:bg-[#E8F5F1] transition-colors">Register University</Link>
+            <h3 className="font-semibold text-gray-900 mb-2">Are you a school?</h3>
+            <p className="text-sm text-gray-500 mb-4">Register your school to verify your students and boost their credibility.</p>
+            <Link href="/register?type=university" className="block border border-[#0F6E56] text-[#0F6E56] text-sm font-semibold text-center py-2.5 rounded-[10px] hover:bg-[#E8F5F1] transition-colors">Register School</Link>
           </div>
         </aside>
       </div>

@@ -26,14 +26,14 @@ export default async function UniversitiesPage() {
       <Navbar />
       <div className="flex-1 max-w-[1440px] mx-auto w-full px-5 lg:px-20 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Partner Universities</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Partner Schools</h1>
           <p className="text-gray-500 mt-1">
-            Verified institutions that trust OJT Connect PH — {universities.length} universities
+            Verified institutions that trust OJT Connect PH — {universities.length} schools
           </p>
         </div>
 
         {universities.length === 0 ? (
-          <EmptyState title="No universities yet" description="Verified universities will appear here." icon={University} />
+          <EmptyState title="No schools yet" description="Verified schools will appear here." icon={University} />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
             {universities.map((uni) => (

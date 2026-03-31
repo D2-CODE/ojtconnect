@@ -39,7 +39,7 @@ export default function UniversityPreviewPage() {
     <div className="p-6 max-w-3xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Public Preview</h1>
-        <p className="text-gray-500 text-sm mt-1">This is how your university appears to others.</p>
+        <p className="text-gray-500 text-sm mt-1">This is how your School appears to others.</p>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-6">

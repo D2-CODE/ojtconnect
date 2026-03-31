@@ -64,11 +64,11 @@ export default function UniversityAdminDashboardPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">University Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1">Manage your students and university profile.</p>
+        <h1 className="text-2xl font-bold text-gray-900">School Dashboard</h1>
+        <p className="text-gray-500 text-sm mt-1">Manage your students and school profile.</p>
       </div>
 
-      {/* University status */}
+      {/* School status */}
       <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-6 flex items-center gap-4">
         <div className="w-12 h-12 rounded-xl bg-[#E8F5F1] flex items-center justify-center flex-shrink-0">
           <University className="w-6 h-6 text-[#0F6E56]" />
@@ -79,7 +79,7 @@ export default function UniversityAdminDashboardPage() {
             <Badge label={uniProfile?.verificationStatus === 'verified' ? 'Verified' : 'Pending'} variant={uniProfile?.verificationStatus === 'verified' ? 'success' : 'warning'} />
           </div>
           {uniProfile?.verificationStatus !== 'verified' && (
-            <p className="text-xs text-gray-400 mt-0.5">Your university is awaiting verification by the platform admin.</p>
+            <p className="text-xs text-gray-400 mt-0.5">Your School is awaiting verification by the platform admin.</p>
           )}
         </div>
         <Link href="/university-admin/profile"><Button variant="outline" className="flex-shrink-0">Edit Profile</Button></Link>

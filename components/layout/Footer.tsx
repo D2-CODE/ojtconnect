@@ -15,7 +15,7 @@ export function Footer() {
               <span className="font-bold text-white">OJT Connect PH</span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
-              The free internship platform connecting Filipino students with companies and universities across the Philippines.
+              The free internship platform connecting Filipino students with companies and schools across the Philippines.
             </p>
           </div>
 
@@ -44,7 +44,7 @@ export function Footer() {
             <h4 className="text-white font-semibold text-sm mb-3">Platform</h4>
             <ul className="flex flex-col gap-2 text-sm">
               <li><Link href="/wall" className="hover:text-white transition-colors">Internship Wall</Link></li>
-              <li><Link href="/register?type=university" className="hover:text-white transition-colors">Register University</Link></li>
+              <li><Link href="/register?type=university" className="hover:text-white transition-colors">Register School</Link></li>
               <li><Link href="/login" className="hover:text-white transition-colors">Sign In</Link></li>
             </ul>
           </div>
@@ -52,7 +52,7 @@ export function Footer() {
 
         <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-xs text-gray-500">© 2026 OJT Connect PH. All rights reserved.</p>
-          <p className="text-xs text-gray-500">Free for all Filipino students and universities.</p>
+          <p className="text-xs text-gray-500">Free for all Filipino students and schools.</p>
         </div>
       </div>
     </footer>
