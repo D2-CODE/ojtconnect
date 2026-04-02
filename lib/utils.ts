@@ -124,3 +124,39 @@ export function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength - 1).trimEnd() + "…";
 }
+
+/**
+ * Strips Facebook UI noise from scraped post text.
+ * Pass stripLines from DB — fetched server-side before calling this.
+ */
+export function cleanPostText(text: string, stripLines: string[] = []): string {
+  if (!text) return text;
+
+  const FALLBACK_REGEX = [
+    /^\d+\s*(likes?|comments?|shares?).*/i,
+    /^\d+[hmd]\s*[·•].*/i,
+    /^like\s*[·•]\s*reply.*/i,
+    /^view (all )?\d+ (comments?|replies).*/i,
+  ];
+
+  const lines = text.split('\n');
+  const cleaned = lines
+    .map((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return '';
+      // Strip leading unicode noise (…, ·, •, etc.) before matching
+      const normalized = trimmed.replace(/^[\u2026·•…\s]+/u, '').trim().toLowerCase();
+      if (stripLines.some((s) => normalized.startsWith(s.toLowerCase()) || normalized === s.toLowerCase())) return '';
+      if (FALLBACK_REGEX.some((re) => re.test(trimmed))) return '';
+      // Strip inline suffix: e.g. "...thank you Comment as Vinod"
+      let result = trimmed;
+      for (const s of stripLines) {
+        const idx = result.toLowerCase().indexOf(s.toLowerCase());
+        if (idx > 0) result = result.slice(0, idx).trim();
+      }
+      return result;
+    })
+    .filter(Boolean);
+
+  return cleaned.join('\n').trim();
+}

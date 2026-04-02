@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
     const mine = searchParams.get('mine') === 'true';
     const showHidden = searchParams.get('showHidden') === 'true';
     const hasContact = searchParams.get('hasContact') === 'true';
+    const dateFrom = searchParams.get('dateFrom');
     let postedBy = searchParams.get('postedBy');
 
     let mineUserName: string | null = null;
@@ -62,6 +63,10 @@ export async function GET(req: NextRequest) {
           { 'SectionData.fbleads.phones': { $exists: true, $ne: '' } },
         ],
       });
+    }
+
+    if (dateFrom) {
+      andClauses.push({ createdAt: { $gte: new Date(dateFrom) } });
     }
 
     if (search) {
@@ -127,7 +132,7 @@ export async function POST(req: NextRequest) {
     }
     const leadType = role === 'company' ? 'internship' : 'intern';
     // Auto-detect type from title+description for better accuracy
-    const detectedType = detectLeadType(`${title} ${description}`);
+    const detectedType = await detectLeadType(`${title} ${description}`);
     const finalLeadType = detectedType ?? leadType;
     const finalSource = finalLeadType === 'internship' ? 'company' : 'student';
     const post = await OjtWall.create({
@@ -150,44 +155,6 @@ export async function POST(req: NextRequest) {
       createdAt: new Date(),
     });
     return NextResponse.json({ success: true, data: post }, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
-  }
-}
-
-// Bulk reclassify all scraped posts using keyword detection (admin only)
-export async function PUT(_req: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session?.user || session.user.roleName !== 'super_admin') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-    await connectDB();
-
-    const posts = await OjtWall.find({ source: 'scraped' })
-      .select('_id SectionData')
-      .lean<{ _id: string; SectionData?: { fbleads?: { post_text?: string; lead_type?: string } } }[]>();
-
-    let changed = 0;
-    const bulkOps: Array<{ updateOne: { filter: { _id: string }; update: { $set: { 'SectionData.fbleads.lead_type': string } } } }> = [];
-
-    for (const post of posts) {
-      const text = post.SectionData?.fbleads?.post_text || '';
-      const detected = detectLeadType(text);
-      if (!detected) continue;
-      if (detected === post.SectionData?.fbleads?.lead_type) continue;
-      bulkOps.push({
-        updateOne: {
-          filter: { _id: post._id },
-          update: { $set: { 'SectionData.fbleads.lead_type': detected } },
-        },
-      });
-      changed++;
-    }
-
-    if (bulkOps.length > 0) await OjtWall.bulkWrite(bulkOps as any);
-
-    return NextResponse.json({ success: true, total: posts.length, changed });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }

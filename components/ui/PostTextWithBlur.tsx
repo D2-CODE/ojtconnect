@@ -1,6 +1,31 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+const STRIP_PREFIXES = [
+  'comment as', 'answer as', 'write a comment',
+  'see more', 'read more', 'read less', 'show more', 'show less',
+  'See all',
+];
+
+function stripUILines(text: string): string {
+  return text
+    .split('\n')
+    .map((line) => {
+      const lower = line.trim().toLowerCase();
+      // Remove whole line if it starts with a strip prefix
+      if (STRIP_PREFIXES.some((p) => lower.startsWith(p))) return '';
+      // Truncate inline suffix e.g. "Thank you! Comment as Vinod"
+      let result = line;
+      for (const p of STRIP_PREFIXES) {
+        const idx = result.toLowerCase().indexOf(p);
+        if (idx > 0) result = result.slice(0, idx).trim();
+      }
+      return result;
+    })
+    .filter(Boolean)
+    .join('\n');
+}
+
 // Matches emails and phone numbers in text
 const SENSITIVE_REGEX = /([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}|(\+?63|0)[\s\-]?\d{3}[\s\-]?\d{3}[\s\-]?\d{4})/g;
 
@@ -56,9 +81,11 @@ export function PostTextWithBlur({ postId, text, isCompany, isLoggedIn }: Props)
   // Non-company logged in users or not logged in — always blur sensitive
   const shouldBlur = !isCompany ? true : !unlocked;
 
+  const cleanedText = stripUILines(text);
+
   return (
     <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-600">
-      {renderText(text, shouldBlur)}
+      {renderText(cleanedText, shouldBlur)}
     </pre>
   );
 }

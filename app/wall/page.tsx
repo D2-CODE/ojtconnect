@@ -10,6 +10,7 @@ import { Pagination } from '@/components/ui/Pagination';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Search, FileText, SlidersHorizontal, X, ChevronDown } from 'lucide-react';
+import { DropdownSelect } from '@/components/ui/DropdownSelect';
 import Link from 'next/link';
 
 const TABS = [
@@ -50,6 +51,7 @@ function WallContent() {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [search, setSearch] = useState('');
   const [hasContact, setHasContact] = useState(false);
+  const [dateFilter, setDateFilter] = useState('all');
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const [posts, setPosts] = useState<unknown[]>([]);
@@ -78,13 +80,26 @@ function WallContent() {
       if (activeTab !== 'all') params.set('type', activeTab);
       if (search) params.set('search', search);
       if (hasContact) params.set('hasContact', 'true');
+      if (dateFilter !== 'all') {
+        const now = new Date();
+        let from: Date;
+        if (dateFilter === 'today') {
+          from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        } else if (dateFilter === 'week') {
+          from = new Date(now);
+          from.setDate(now.getDate() - 7);
+        } else {
+          from = new Date(now.getFullYear(), now.getMonth(), 1);
+        }
+        params.set('dateFrom', from.toISOString());
+      }
       const res = await fetch(`/api/wall?${params}`);
       const data = await res.json();
       if (data.success) { setPosts(data.data); setTotal(data.meta.total); }
     } finally {
       setLoading(false);
     }
-  }, [activeTab, search, hasContact, page]);
+  }, [activeTab, search, hasContact, dateFilter, page]);
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
@@ -111,6 +126,18 @@ function WallContent() {
             className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0F6E56]/20 focus:border-[#0F6E56]"
           />
         </div>
+        <DropdownSelect
+          options={[
+            { label: 'All Time', value: 'all' },
+            { label: 'Today', value: 'today' },
+            { label: 'This Week', value: 'week' },
+            { label: 'This Month', value: 'month' },
+          ]}
+          value={dateFilter}
+          onChange={(v) => { setDateFilter(v); setPage(1); }}
+          placeholder="All Time"
+          className="w-full md:w-auto"
+        />
         <div className="relative w-full md:w-auto" ref={filterRef}>
           <button
             onClick={() => setFilterOpen(o => !o)}
