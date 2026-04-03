@@ -156,3 +156,41 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }
 }
+
+// Bulk reclassify all scraped posts using keyword detection (admin only)
+export async function PUT(_req: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.roleName !== 'super_admin') {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+    await connectDB();
+
+    const posts = await OjtWall.find({ source: 'scraped' })
+      .select('_id SectionData')
+      .lean<{ _id: string; SectionData?: { fbleads?: { post_text?: string; lead_type?: string } } }[]>();
+
+    let changed = 0;
+    const bulkOps: Array<{ updateOne: { filter: { _id: string }; update: { $set: { 'SectionData.fbleads.lead_type': string } } } }> = [];
+
+    for (const post of posts) {
+      const text = post.SectionData?.fbleads?.post_text || '';
+      const detected = detectLeadType(text);
+      if (!detected) continue;
+      if (detected === post.SectionData?.fbleads?.lead_type) continue;
+      bulkOps.push({
+        updateOne: {
+          filter: { _id: post._id },
+          update: { $set: { 'SectionData.fbleads.lead_type': detected } },
+        },
+      });
+      changed++;
+    }
+
+    if (bulkOps.length > 0) await OjtWall.bulkWrite(bulkOps as any);
+
+    return NextResponse.json({ success: true, total: posts.length, changed });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
+  }
+}

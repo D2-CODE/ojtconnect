@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import OjtWall from '@/models/OjtWall';
 import EmailLog from '@/models/EmailLog';
-import { generateId, generateClaimToken, cleanPostText } from '@/lib/utils';
+import { generateId, generateClaimToken } from '@/lib/utils';
 import { sendClaimInviteEmail } from '@/lib/email';
-import { detectLeadType } from '@/lib/detectLeadType';
 
 function extractEmails(emails: unknown): string[] {
   if (!emails) return [];
@@ -58,11 +57,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'lead_type must be "intern" or "internship"' }, { status: 422 });
   }
 
-  // Fetch strip lines from DB then clean post text
-  const { getStripLines } = await import('@/lib/detectLeadType');
-  const stripLines = await getStripLines();
-  const cleanedPostText = cleanPostText(String(post_text ?? ''), stripLines);
-
   // 4. Deduplicate by fb_id — if already exists skip save and email
   await connectDB();
 
@@ -94,14 +88,14 @@ export async function POST(req: NextRequest) {
           fb_id: fb_id as string | undefined,
           profile_url: profile_url as string | undefined,
           profile_pic: profile_pic as string | undefined,
-          post_text: cleanedPostText || undefined,
+          post_text: post_text as string | undefined,
           post_link: post_link as string | undefined,
           post_date: post_date ? new Date(post_date as string) : undefined,
           emails: Array.isArray(rawEmails) ? (rawEmails as string[]).join(', ') : (rawEmails as string | undefined),
           phones: Array.isArray(phones) ? (phones as string[]).join(', ') : (phones as string | undefined),
           skills: Array.isArray(skills) ? (skills as string[]).join(', ') : (skills as string | undefined),
           experience: experience as string | undefined,
-          lead_type: (await detectLeadType(cleanedPostText)) ?? ((lead_type as string | undefined) ?? 'internship'),
+          lead_type: (lead_type as string | undefined) ?? 'internship',
           resume_url: resume_url as string | undefined,
           scraped_at: scraped_at ? new Date(scraped_at as string) : new Date(),
         },
@@ -123,7 +117,7 @@ export async function POST(req: NextRequest) {
   // 6. Send emails
   const emails = extractEmails(rawEmails);
   const posterName = String(name ?? 'there');
-  const postText = cleanedPostText;
+  const postText = String(post_text ?? '');
 
   const emailResults = await Promise.allSettled(
     emails.map(async (email) => {

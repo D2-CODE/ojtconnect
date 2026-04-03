@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { SkillTag } from '@/components/ui/SkillTag';
 import { useToast } from '@/components/ui/Toast';
-import { FileText, Search, Eye, Pencil, Trash2, Lock, LockOpen, ChevronDown, Plus, X, RefreshCw } from 'lucide-react';
+import { FileText, Search, Eye, Pencil, Trash2, Lock, LockOpen, RefreshCw } from 'lucide-react';
 import { truncate, formatDate } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -227,129 +227,23 @@ export default function AdminPostsPage() {
     }
   };
 
-  // Keywords manager
-  type KwCategory = 'companyPriority' | 'studentPriority' | 'stripLines';
-  interface Keywords { companyPriority: string[]; studentPriority: string[]; stripLines: string[]; }
-  const [kwOpen, setKwOpen] = useState(false);
-  const [keywords, setKeywords] = useState<Keywords | null>(null);
-  const [kwLoading, setKwLoading] = useState(false);
-  const [kwSaving, setKwSaving] = useState(false);
-  const [kwInputs, setKwInputs] = useState<Record<KwCategory, string>>({ companyPriority: '', studentPriority: '', stripLines: '' });
-
-  const loadKeywords = async () => {
-    setKwLoading(true);
-    const d = await fetch('/api/admin/keywords').then((r) => r.json());
-    if (d.success) setKeywords({
-      companyPriority: d.data.companyPriority ?? [],
-      studentPriority: d.data.studentPriority ?? [],
-      stripLines: d.data.stripLines ?? [],
-    });
-    setKwLoading(false);
-  };
-
-  const saveKeywords = async () => {
-    if (!keywords) return;
-    setKwSaving(true);
-    const payload = {
-      companyPriority: keywords.companyPriority ?? [],
-      studentPriority: keywords.studentPriority ?? [],
-      stripLines: keywords.stripLines ?? [],
-    };
-    const d = await fetch('/api/admin/keywords', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then((r) => r.json());
-    if (d.success) { showToast('Keywords saved!', 'success'); setKeywords(d.data); }
-    else showToast(d.error || 'Failed', 'error');
-    setKwSaving(false);
-  };
-
-  const addKeyword = (cat: KwCategory) => {
-    const val = kwInputs[cat].trim();
-    if (!val || (keywords?.[cat] ?? []).includes(val)) return;
-    setKeywords((prev) => prev ? { ...prev, [cat]: [...(prev[cat] ?? []), val] } : prev);
-    setKwInputs((prev) => ({ ...prev, [cat]: '' }));
-  };
-
-  const removeKeyword = (cat: KwCategory, kw: string) => {
-    setKeywords((prev) => prev ? { ...prev, [cat]: (prev[cat] ?? []).filter((k) => k !== kw) } : prev);
-  };
-
-  const KW_SECTIONS: { key: KwCategory; label: string; desc: string; color: string }[] = [
-    { key: 'companyPriority', label: 'Company Priority', desc: 'Company post keywords', color: 'text-[#0F6E56] bg-[#E8F5F1]' },
-    { key: 'studentPriority', label: 'Student Priority', desc: 'Student post keywords', color: 'text-blue-600 bg-blue-50' },
-    { key: 'stripLines', label: 'Strip Lines', desc: 'Removed from post text', color: 'text-red-600 bg-red-50' },
-  ];
-
   const isCompanyPost = editPost?.source === 'company' || editPost?.SectionData?.fbleads?.lead_type === 'internship';
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Wall Posts</h1>
-        <p className="text-gray-500 text-sm mt-1">Manage all OJT wall posts.</p>
-      </div>
-
-      {/* Keywords Manager */}
-      <div className="bg-white border border-gray-200 rounded-2xl mb-6 overflow-hidden">
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Wall Posts</h1>
+          <p className="text-gray-500 text-sm mt-1">Manage all OJT wall posts.</p>
+        </div>
         <button
-          onClick={() => { setKwOpen((o) => !o); if (!kwOpen && !keywords) loadKeywords(); }}
-          className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+          onClick={handleReclassify}
+          disabled={reclassifying}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-[#0F6E56] text-[#0F6E56] rounded-xl hover:bg-[#E8F5F1] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#E8F5F1] flex items-center justify-center">
-              <Search className="w-4 h-4 text-[#0F6E56]" />
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-semibold text-gray-900">Auto-Classification Keywords</p>
-              <p className="text-xs text-gray-500">Manage keywords used to auto-detect Student Post vs Company Post</p>
-            </div>
-          </div>
-          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${kwOpen ? 'rotate-180' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${reclassifying ? 'animate-spin' : ''}`} />
+          {reclassifying ? 'Reclassifying...' : 'Auto-Reclassify Posts'}
         </button>
-
-        {kwOpen && (
-          <div className="border-t border-gray-100 p-5">
-            {kwLoading ? (
-              <div className="flex justify-center py-8"><LoadingSpinner /></div>
-            ) : keywords ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
-                  {KW_SECTIONS.map(({ key, label, desc, color }) => (
-                    <div key={key} className="border border-gray-100 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${color}`}>{label}</span>
-                        <span className="text-xs text-gray-400">{desc}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5 mb-3 min-h-[32px]">
-                        {(keywords[key] ?? []).map((kw) => (
-                          <span key={kw} className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-lg">
-                            {kw}
-                            <button onClick={() => removeKeyword(key, kw)} className="text-gray-400 hover:text-red-500 transition-colors">
-                              <X className="w-3 h-3" />
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex gap-2">
-                        <input
-                          className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0F6E56]/20 focus:border-[#0F6E56]"
-                          placeholder="Add keyword..."
-                          value={kwInputs[key]}
-                          onChange={(e) => setKwInputs((p) => ({ ...p, [key]: e.target.value }))}
-                          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addKeyword(key))}
-                        />
-                        <button onClick={() => addKeyword(key)} className="p-1.5 rounded-lg bg-[#E8F5F1] text-[#0F6E56] hover:bg-[#0F6E56] hover:text-white transition-colors">
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-end">
-                  <Button onClick={saveKeywords} loading={kwSaving}>Save Keywords</Button>
-                </div>
-              </>
-            ) : null}
-          </div>
-        )}
       </div>
 
       <div className="mb-4 relative">

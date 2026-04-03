@@ -1,5 +1,3 @@
-import defaultKeywords from './keywords.json';
-
 export type LeadType = 'intern' | 'internship';
 
 // High-confidence keywords — counted as 3 matches each
@@ -98,30 +96,17 @@ const STUDENT_NORMAL: RegExp[] = [
   /\bposition\b/i,
 ];
 
-export async function detectLeadType(text: string): Promise<LeadType | null> {
+export function detectLeadType(text: string): LeadType | null {
   if (!text || text.trim().length < 10) return null;
-
-  const kw = await getKeywords();
-  const lower = text.toLowerCase();
 
   let companyScore = 0;
   let studentScore = 0;
 
-  for (const k of kw.companyPriority) if (lower.includes(k.toLowerCase())) companyScore++;
-  for (const k of kw.studentPriority) if (lower.includes(k.toLowerCase())) studentScore++;
+  for (const re of COMPANY_PRIORITY) if (re.test(text)) companyScore += 3;
+  for (const re of COMPANY_NORMAL)   if (re.test(text)) companyScore += 1;
+  for (const re of STUDENT_PRIORITY) if (re.test(text)) studentScore += 3;
+  for (const re of STUDENT_NORMAL)   if (re.test(text)) studentScore += 1;
 
-  if (companyScore === studentScore) return null;
-  return companyScore > studentScore ? 'internship' : 'intern';
-}
-
-export function detectLeadTypeSync(text: string): LeadType | null {
-  if (!text || text.trim().length < 10) return null;
-  const kw = cache ?? defaultKeywords;
-  const lower = text.toLowerCase();
-  let companyScore = 0;
-  let studentScore = 0;
-  for (const k of kw.companyPriority) if (lower.includes(k.toLowerCase())) companyScore++;
-  for (const k of kw.studentPriority) if (lower.includes(k.toLowerCase())) studentScore++;
-  if (companyScore === studentScore) return null;
+  if (companyScore === studentScore) return null; // not confident enough — keep original
   return companyScore > studentScore ? 'internship' : 'intern';
 }
