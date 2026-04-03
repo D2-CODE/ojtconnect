@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
   let body: Record<string, unknown>;
   try {
     body = await req.json();
+    console.log('Body Direct:- ',body);
     console.log('[Scraper] ✅ Body parsed:', JSON.stringify(body, null, 2));
   } catch {
     console.log('[Scraper] ❌ Invalid JSON body');
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
     lead_type, resume_url, scraped_at,
   } = body as Record<string, unknown>;
 
-  console.log('[Scraper] Fields — name:', name, '| lead_type:', lead_type, '| emails:', rawEmails);
+  console.log('[Scraper] Fields — name:', name, '| lead_type:', lead_type,'| emails:', rawEmails);
 
   if (!name && !post_text) {
     console.log('[Scraper] ❌ Validation failed — name and post_text both missing');
@@ -73,6 +74,7 @@ export async function POST(req: NextRequest) {
   const claimTokenExpiry = new Date(Date.now() + Number(process.env.CLAIM_TOKEN_EXPIRY_DAYS ?? 7) * 86_400_000);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
   console.log('[Scraper] appUrl:', appUrl);
+
 
   // 5. Save document
   let doc;
@@ -105,6 +107,7 @@ export async function POST(req: NextRequest) {
       isActive: true,
       createdAt: new Date(),
     });
+    console.log('Scraper Post Data:- ',doc.SectionData);
     console.log('[Scraper] ✅ Document saved | id:', doc._id, '| isActive:', doc.isActive, '| source:', doc.source, '| status:', doc.status);
   } catch (saveErr) {
     console.log('[Scraper] ❌ Failed to save document:', saveErr);
@@ -144,6 +147,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    data: { id: doc._id, claimToken, emailsSentTo: emails, emailsSent: sentCount },
+    data: doc,
   }, { status: 201 });
 }

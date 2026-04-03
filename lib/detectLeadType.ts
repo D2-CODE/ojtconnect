@@ -6,7 +6,10 @@ const COMPANY_PRIORITY: RegExp[] = [
   /\bwe are hiring\b/i,
   /\bnow hiring\b/i,
   /\bwe('re| are) looking for\b/i,
-  /\baccepting (ojt |intern|application)/i,
+  // Must be company-initiated acceptance, not a student asking "if you are accepting"
+  /\bwe (are |'re )?accepting (ojt|intern|application)/i,
+  /\bnow accepting (ojt|intern|application)/i,
+  /\bcurrently accepting (ojt|intern|application)/i,
   /\bopen for (ojt |intern)/i,
   /\bslots? (available|open|left)\b/i,
   /\b\d+\s*slots?\b/i,
@@ -23,7 +26,6 @@ const COMPANY_PRIORITY: RegExp[] = [
   /\binternship (program|opportunity|opening|position)\b/i,
   /\bpaid internship\b/i,
   /\bunpaid internship\b/i,
-  /\bminimum of \d+ hours\b/i,
   /\bojt program\b/i,
   /\bqualifications?:/i,
   /\brequirements?:/i,
@@ -35,28 +37,22 @@ const COMPANY_PRIORITY: RegExp[] = [
 
 // Normal company keywords — counted as 1 match each
 const COMPANY_NORMAL: RegExp[] = [
-  /\bintern(s)?\b/i,
   /\bapply\b/i,
   /\bapplication\b/i,
   /\bvacancy\b/i,
-  /\bposition\b/i,
   /\bwe need\b/i,
   /\bour team\b/i,
   /\bwork with us\b/i,
-  /\bremote\b/i,
-  /\bhybrid\b/i,
-  /\bonsite\b/i,
-  /\bon-site\b/i,
-  /\ballowance\b/i,
-  /\bstipend\b/i,
 ];
 
 // High-confidence student keywords — counted as 3 matches each
 const STUDENT_PRIORITY: RegExp[] = [
-  /\blooking for (an? )?ojt\b/i,
-  /\bseeking (an? )?ojt\b/i,
+  /\blooking for (an? )?(ojt|internship)\b/i,
+  /\bseeking (an? )?(ojt|internship)\b/i,
   /\bi('m| am) looking\b/i,
   /\bi('m| am) seeking\b/i,
+  /\bi am currently (a |an )?\w+ student\b/i,
+  /\bcurrently (a |an )?\w+ student\b/i,
   /\bi('m| am) a (student|graduating|4th|3rd|2nd)\b/i,
   /\bplease (hire|consider) me\b/i,
   /\bhire me\b/i,
@@ -71,11 +67,18 @@ const STUDENT_PRIORITY: RegExp[] = [
   /\bcurrently (a )?student\b/i,
   /\bfresh graduate\b/i,
   /\bgraduating (student|this)\b/i,
+  // Student stating their own hour/allowance requirements
+  /\bminimum of \d+ hours\b/i,
+  /\bwilling to (start|work|extend)\b/i,
+  /\bi am willing\b/i,
+  /\bif your company\b/i,
+  /\bplease feel free to (message|contact)\b/i,
+  /\bwould (greatly )?appreciate\b/i,
 ];
 
 // Normal student keywords — counted as 1 match each
 const STUDENT_NORMAL: RegExp[] = [
-  /\bbs (computer|information|accountancy|business|education|nursing|engineering)/i,
+  /\bbs (computer|information|accountancy|business|education|nursing|engineering|psychology)/i,
   /\b(4th|3rd|2nd|1st) year\b/i,
   /\bcollege student\b/i,
   /\buniversity student\b/i,
@@ -83,6 +86,14 @@ const STUDENT_NORMAL: RegExp[] = [
   /\bgraduate\b/i,
   /\bthesis\b/i,
   /\bschool\b/i,
+  /\bremote\b/i,
+  /\bhybrid\b/i,
+  /\bonsite\b/i,
+  /\bon-site\b/i,
+  /\ballowance\b/i,
+  /\bstipend\b/i,
+  /\bintern(s)?\b/i,
+  /\bposition\b/i,
 ];
 
 export function detectLeadType(text: string): LeadType | null {
