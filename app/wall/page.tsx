@@ -10,7 +10,6 @@ import { Pagination } from '@/components/ui/Pagination';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Search, FileText, SlidersHorizontal, X, ChevronDown } from 'lucide-react';
-import { DropdownSelect } from '@/components/ui/DropdownSelect';
 import Link from 'next/link';
 
 const TABS = [
@@ -20,6 +19,32 @@ const TABS = [
 ];
 
 const VALID_TYPES = ['intern', 'internship'];
+
+const TIME_OPTIONS = [
+  { label: 'All Time', value: 'all' },
+  { label: 'Today', value: 'today' },
+  { label: 'This Week', value: 'week' },
+  { label: 'This Month', value: 'month' },
+];
+
+function getDateFrom(period: string): string | null {
+  const now = new Date();
+  if (period === 'today') {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return d.toISOString();
+  }
+  if (period === 'week') {
+    const d = new Date(now);
+    d.setDate(now.getDate() - now.getDay());
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString();
+  }
+  if (period === 'month') {
+    const d = new Date(now.getFullYear(), now.getMonth(), 1);
+    return d.toISOString();
+  }
+  return null;
+}
 
 function PostListingWidget() {
   const { data: session, status } = useSession();
@@ -51,7 +76,9 @@ function WallContent() {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [search, setSearch] = useState('');
   const [hasContact, setHasContact] = useState(false);
-  const [dateFilter, setDateFilter] = useState('all');
+  const [timePeriod, setTimePeriod] = useState('all');
+  const [timeOpen, setTimeOpen] = useState(false);
+  const timeRef = useRef<HTMLDivElement>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const [posts, setPosts] = useState<unknown[]>([]);
@@ -62,6 +89,7 @@ function WallContent() {
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (filterRef.current && !filterRef.current.contains(e.target as Node)) setFilterOpen(false);
+      if (timeRef.current && !timeRef.current.contains(e.target as Node)) setTimeOpen(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -80,26 +108,15 @@ function WallContent() {
       if (activeTab !== 'all') params.set('type', activeTab);
       if (search) params.set('search', search);
       if (hasContact) params.set('hasContact', 'true');
-      if (dateFilter !== 'all') {
-        const now = new Date();
-        let from: Date;
-        if (dateFilter === 'today') {
-          from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        } else if (dateFilter === 'week') {
-          from = new Date(now);
-          from.setDate(now.getDate() - 7);
-        } else {
-          from = new Date(now.getFullYear(), now.getMonth(), 1);
-        }
-        params.set('dateFrom', from.toISOString());
-      }
+      const dateFrom = getDateFrom(timePeriod);
+      if (dateFrom) params.set('dateFrom', dateFrom);
       const res = await fetch(`/api/wall?${params}`);
       const data = await res.json();
       if (data.success) { setPosts(data.data); setTotal(data.meta.total); }
     } finally {
       setLoading(false);
     }
-  }, [activeTab, search, hasContact, dateFilter, page]);
+  }, [activeTab, search, hasContact, timePeriod, page]);
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
@@ -126,18 +143,37 @@ function WallContent() {
             className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0F6E56]/20 focus:border-[#0F6E56]"
           />
         </div>
-        <DropdownSelect
-          options={[
-            { label: 'All Time', value: 'all' },
-            { label: 'Today', value: 'today' },
-            { label: 'This Week', value: 'week' },
-            { label: 'This Month', value: 'month' },
-          ]}
-          value={dateFilter}
-          onChange={(v) => { setDateFilter(v); setPage(1); }}
-          placeholder="All Time"
-          className="w-full md:w-auto"
-        />
+        {/* Time Period Dropdown */}
+        <div className="relative w-full md:w-auto" ref={timeRef}>
+          <button
+            onClick={() => setTimeOpen(o => !o)}
+            className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-sm border rounded-[10px] transition-colors md:w-auto md:justify-start ${
+              timePeriod !== 'all'
+                ? 'border-[#0F6E56] bg-[#E8F5F1] text-[#0F6E56] font-medium'
+                : 'border-gray-300 text-gray-600 hover:border-gray-400'
+            }`}
+          >
+            <span>{TIME_OPTIONS.find(o => o.value === timePeriod)?.label ?? 'All Time'}</span>
+            <ChevronDown className={`w-3.5 h-3.5 flex-shrink-0 transition-transform ${timeOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {timeOpen && (
+            <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden md:left-auto md:right-0 md:w-40">
+              {TIME_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => { setTimePeriod(opt.value); setPage(1); setTimeOpen(false); }}
+                  className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                    timePeriod === opt.value
+                      ? 'bg-[#E8F5F1] text-[#0F6E56] font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="relative w-full md:w-auto" ref={filterRef}>
           <button
             onClick={() => setFilterOpen(o => !o)}
