@@ -16,7 +16,7 @@ export function Tabs({ tabs, activeTab, onTabChange, className }: TabsProps) {
         <button
           key={tab.value}
           onClick={() => onTabChange(tab.value)}
-          className={`px-5 py-2 rounded-[8px] text-sm font-medium transition-all
+          className={`px-2 py-2 rounded-[8px] text-sm font-medium transition-all
             ${activeTab === tab.value
               ? 'bg-white text-gray-900 shadow-sm'
               : 'text-gray-500 hover:text-gray-700'}`}

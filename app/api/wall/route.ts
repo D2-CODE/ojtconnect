@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
     const mine = searchParams.get('mine') === 'true';
     const showHidden = searchParams.get('showHidden') === 'true';
     const hasContact = searchParams.get('hasContact') === 'true';
+    const dateFrom = searchParams.get('dateFrom');
     let postedBy = searchParams.get('postedBy');
 
     let mineUserName: string | null = null;
@@ -62,6 +63,10 @@ export async function GET(req: NextRequest) {
           { 'SectionData.fbleads.phones': { $exists: true, $ne: '' } },
         ],
       });
+    }
+
+    if (dateFrom) {
+      andClauses.push({ createdAt: { $gte: new Date(dateFrom) } });
     }
 
     if (search) {
@@ -125,11 +130,8 @@ export async function POST(req: NextRequest) {
       const company = await Company.findById(profileRef).lean<{ companyName?: string }>();
       if (company?.companyName) displayName = company.companyName;
     }
-    const leadType = role === 'company' ? 'internship' : 'intern';
-    // Auto-detect type from title+description for better accuracy
-    const detectedType = detectLeadType(`${title} ${description}`);
-    const finalLeadType = detectedType ?? leadType;
-    const finalSource = finalLeadType === 'internship' ? 'company' : 'student';
+    // source is always role-based; detectLeadType is informational only (not used for native posts)
+    const finalSource = role === 'company' ? 'company' : 'student';
     const post = await OjtWall.create({
       _id: generateId(),
       source: finalSource,
