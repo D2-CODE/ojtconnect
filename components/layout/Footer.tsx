@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { GraduationCap } from 'lucide-react';
+import Image from 'next/image';
 
 export function Footer() {
   return (
@@ -8,11 +8,9 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
           {/* Brand */}
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-[#0F6E56] flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-bold text-white">OJT Connect PH</span>
+            <div className="flex flex-col gap-3 mb-3">
+              <Image src="/Logo/OJT Connect Ph logo.jpg" alt="OJT Connect PH" width={100} height={44} className="h-11 w-auto object-contain" />
+              <Image src="/Logo/Work24-PH-Logo-Transparent.png" alt="Work24 PH" width={100} height={44} className="h-11 w-auto object-contain brightness-0 invert" />
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
               The free internship platform connecting Filipino students with companies and schools across the Philippines.

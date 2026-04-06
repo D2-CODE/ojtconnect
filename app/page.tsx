@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { UniversityCard } from '@/components/cards/UniversityCard';
@@ -40,17 +41,17 @@ export default async function HomePage() {
       <Navbar />
 
       {/* Hero */}
-      <section className="bg-gradient-to-b from-[#F0FAF6] to-white pt-20 pb-24 px-5">
+      <section className="bg-gradient-to-b from-[#F0FAF6] to-white pt-10 pb-10 px-5">
         <div className="max-w-[1440px] mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-[#E8F5F1] text-[#0F6E56] text-sm font-medium px-4 py-1.5 rounded-full mb-6">
+          <div className="inline-flex items-center gap-2 bg-[#E8F5F1] text-[#0F6E56] text-sm font-medium px-4 py-1.5 rounded-full ">
             <span className="w-1.5 h-1.5 rounded-full bg-[#0F6E56]" />
             Free for students and Schools
           </div>
-          <h1 className="text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
+          <h1 className="text-3xl lg:text-5xl font-extrabold text-gray-900  leading-tight">
             Find your  Interns.<br />
             <span className="text-[#0F6E56]">Connect with companies.</span>
           </h1>
-          <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-10">
+          <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-6 mt-2">
             OJT Connect PH is the free platform linking Filipino students with verified internship opportunities across the Philippines.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -60,6 +61,26 @@ export default async function HomePage() {
             <Link href="/wall" className="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-gray-50 transition-colors">
               Browse Internship Wall
             </Link>
+          </div>
+        </div>
+      </section>
+
+
+{/* Advertisement Banner */}
+      <section className="py-4 px-5">
+        <div className="max-w-[1440px] mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className="relative rounded-xs overflow-hidden bg-gray-200 border border-gray-200" style={{ aspectRatio: '16/9' }}>
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400">
+                  <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="1.5" /><path d="M3 9l4-4 4 4 4-6 4 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </div>
+                  <span className="text-xs font-medium">Ad Banner {n}</span>
+                  <span className="text-[10px] text-gray-400">800 × 450 px</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -98,6 +119,28 @@ export default async function HomePage() {
         </div>
       </section>
 
+{/* Advertisement — 2 Large Banners */}
+      <section className="py-6 px-5 bg-white">
+        <div className="max-w-[1440px] mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2].map((n) => (
+              <div key={n} className="relative rounded-sm overflow-hidden bg-gray-200 border border-gray-200" style={{ aspectRatio: '16/7' }}>
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400">
+                  <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="1.5" />
+                      <path d="M3 9l4-4 4 4 4-6 4 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium">Large Ad Banner {n}</span>
+                  <span className="text-xs text-gray-400">700 × 306 px</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Who it's for */}
       <section className="py-20 px-5 bg-gray-50">
         <div className="max-w-[1440px] mx-auto">
@@ -122,6 +165,24 @@ export default async function HomePage() {
                 </Link>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+{/* Advertisement — 1 Large Banner */}
+      <section className="py-8 px-5 bg-gray-50  ">
+        <div className="max-w-[1440px] mx-auto">
+          <div className="relative w-full rounded-sm overflow-hidden bg-gray-200 border border-gray-200" style={{ aspectRatio: '16/4' }}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400">
+              <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="1.5" />
+                  <path d="M3 9l4-4 4 4 4-6 4 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium">Large Ad Banner</span>
+              <span className="text-xs text-gray-400">1440 × 360 px</span>
+            </div>
           </div>
         </div>
       </section>

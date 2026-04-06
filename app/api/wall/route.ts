@@ -3,7 +3,8 @@ import connectDB from '@/lib/mongodb';
 import OjtWall from '@/models/OjtWall';
 import { auth } from '@/lib/auth';
 import { generateId } from '@/lib/utils';
-import { detectLeadType } from '@/lib/detectLeadType';
+import { detectLeadType, detectLeadTypeWithDB } from '@/lib/detectLeadType';
+import Keywords from '@/models/Keywords';
 
 export async function GET(req: NextRequest) {
   try {
@@ -170,12 +171,18 @@ export async function PUT(_req: NextRequest) {
       .select('_id SectionData')
       .lean<{ _id: string; SectionData?: { fbleads?: { post_text?: string; lead_type?: string } } }[]>();
 
+    const kwDoc = await Keywords.findOne().lean<{ companyKeywords: string[]; studentKeywords: string[] }>();
+    const dbKeywords: { keyword: string; type: 'company' | 'student' }[] = [
+      ...(kwDoc?.companyKeywords ?? []).map(k => ({ keyword: k, type: 'company' as const })),
+      ...(kwDoc?.studentKeywords ?? []).map(k => ({ keyword: k, type: 'student' as const })),
+    ];
+
     let changed = 0;
     const bulkOps: Array<{ updateOne: { filter: { _id: string }; update: { $set: { 'SectionData.fbleads.lead_type': string } } } }> = [];
 
     for (const post of posts) {
       const text = post.SectionData?.fbleads?.post_text || '';
-      const detected = detectLeadType(text);
+      const detected = detectLeadTypeWithDB(text, dbKeywords);
       if (!detected) continue;
       if (detected === post.SectionData?.fbleads?.lead_type) continue;
       bulkOps.push({
