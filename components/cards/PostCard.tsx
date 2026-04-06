@@ -104,7 +104,7 @@ export function PostCard({ post }: PostCardProps) {
                 <CheckCircle2 className="w-3.5 h-3.5" /> Claimed
               </span>
             )}
-            <Link href={`/wall/${post._id}`}><Button variant="outline" size="sm">View Post</Button></Link>
+            <Link href={`/wall/${post._id}`} onClick={() => { sessionStorage.setItem('wall_scroll', String(window.scrollY)); }}><Button variant="outline" size="sm">View Post</Button></Link>
           </div>
         </div>
       </div>
@@ -145,7 +145,7 @@ export function PostCard({ post }: PostCardProps) {
             ? <><CheckCircle2 className="w-3.5 h-3.5" /> Claimed</>
             : <><Clock className="w-3.5 h-3.5" /> Unclaimed</>}
         </span>
-        <Link href={`/wall/${post._id}`}><Button variant="outline" size="sm">View Post</Button></Link>
+        <Link href={`/wall/${post._id}`} onClick={() => sessionStorage.setItem('wall_scroll', String(window.scrollY))}><Button variant="outline" size="sm">View Post</Button></Link>
       </div>
     </div>
   );

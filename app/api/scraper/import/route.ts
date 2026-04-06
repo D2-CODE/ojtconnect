@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import OjtWall from '@/models/OjtWall';
 import EmailLog from '@/models/EmailLog';
+import Keywords from '@/models/Keywords';
 import { generateId, generateClaimToken } from '@/lib/utils';
 import { sendClaimInviteEmail } from '@/lib/email';
+import { detectLeadTypeWithDB } from '@/lib/detectLeadType';
 
 function extractEmails(emails: unknown): string[] {
   if (!emails) return [];
@@ -31,7 +33,7 @@ export async function POST(req: NextRequest) {
   let body: Record<string, unknown>;
   try {
     body = await req.json();
-    console.log('Body Direct:- ',body);
+    console.log('Body Direct:- ', body);
     console.log('[Scraper] ✅ Body parsed:', JSON.stringify(body, null, 2));
   } catch {
     console.log('[Scraper] ❌ Invalid JSON body');
@@ -45,7 +47,7 @@ export async function POST(req: NextRequest) {
     lead_type, resume_url, scraped_at,
   } = body as Record<string, unknown>;
 
-  console.log('[Scraper] Fields — name:', name, '| lead_type:', lead_type,'| emails:', rawEmails);
+  console.log('[Scraper] Fields — name:', name, '| lead_type:', lead_type, '| emails:', rawEmails);
 
   if (!name && !post_text) {
     console.log('[Scraper] ❌ Validation failed — name and post_text both missing');
@@ -57,7 +59,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'lead_type must be "intern" or "internship"' }, { status: 422 });
   }
 
-  // 4. Deduplicate by fb_id — if already exists skip save and email
+  // 4. Deduplicate by fb_id
   await connectDB();
 
   if (fb_id) {
@@ -70,13 +72,23 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // 5. Detect lead_type from DB keywords
+  const kwDoc = await Keywords.findOne().lean<{ companyKeywords: string[]; studentKeywords: string[] }>();
+  const dbKeywords: { keyword: string; type: 'company' | 'student' }[] = [
+    ...(kwDoc?.companyKeywords ?? []).map(k => ({ keyword: k, type: 'company' as const })),
+    ...(kwDoc?.studentKeywords ?? []).map(k => ({ keyword: k, type: 'student' as const })),
+  ];
+  const detectedType = detectLeadTypeWithDB(String(post_text ?? ''), dbKeywords);
+  // Priority: scraper-provided lead_type > detected > fallback 'internship'
+  const finalLeadType = (lead_type as string | undefined) ?? detectedType ?? 'internship';
+  console.log('[Scraper] lead_type from scraper:', lead_type, '| detected:', detectedType, '| final:', finalLeadType);
+
   const claimToken = generateClaimToken();
   const claimTokenExpiry = new Date(Date.now() + Number(process.env.CLAIM_TOKEN_EXPIRY_DAYS ?? 7) * 86_400_000);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
   console.log('[Scraper] appUrl:', appUrl);
 
-
-  // 5. Save document
+  // 6. Save document
   let doc;
   try {
     doc = await OjtWall.create({
@@ -95,7 +107,7 @@ export async function POST(req: NextRequest) {
           phones: Array.isArray(phones) ? (phones as string[]).join(', ') : (phones as string | undefined),
           skills: Array.isArray(skills) ? (skills as string[]).join(', ') : (skills as string | undefined),
           experience: experience as string | undefined,
-          lead_type: (lead_type as string | undefined) ?? 'internship',
+          lead_type: finalLeadType,
           resume_url: resume_url as string | undefined,
           scraped_at: scraped_at ? new Date(scraped_at as string) : new Date(),
         },
@@ -107,14 +119,14 @@ export async function POST(req: NextRequest) {
       isActive: true,
       createdAt: new Date(),
     });
-    console.log('Scraper Post Data:- ',doc.SectionData);
-    console.log('[Scraper] ✅ Document saved | id:', doc._id, '| isActive:', doc.isActive, '| source:', doc.source, '| status:', doc.status);
+    console.log('Scraper Post Data:- ', doc.SectionData);
+    console.log('[Scraper] ✅ Document saved | id:', doc._id, '| lead_type:', finalLeadType);
   } catch (saveErr) {
     console.log('[Scraper] ❌ Failed to save document:', saveErr);
     return NextResponse.json({ success: false, error: String(saveErr) }, { status: 500 });
   }
 
-  // 6. Send emails
+  // 7. Send emails
   const emails = extractEmails(rawEmails);
   const posterName = String(name ?? 'there');
   const postText = String(post_text ?? '');
@@ -145,8 +157,5 @@ export async function POST(req: NextRequest) {
   console.log('[Scraper] ✅ Done | docId:', doc._id, '| emailsSent:', sentCount);
   console.log('[Scraper] ────────────────────────────────────────────────');
 
-  return NextResponse.json({
-    success: true,
-    data: doc,
-  }, { status: 201 });
+  return NextResponse.json({ success: true, data: doc }, { status: 201 });
 }

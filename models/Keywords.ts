@@ -1,23 +1,22 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IKeywords extends Document {
-  companyPriority: string[];
-  studentPriority: string[];
-  stripLines: string[];
-  updatedAt: Date;
+  companyKeywords: string[];
+  studentKeywords: string[];
 }
 
 const KeywordsSchema = new Schema<IKeywords>(
   {
-    companyPriority: { type: [String], default: [] },
-    studentPriority: { type: [String], default: [] },
-    stripLines:      { type: [String], default: [] },
+    companyKeywords: { type: [String], default: [] },
+    studentKeywords: { type: [String], default: [] },
   },
-  { timestamps: true }
+  { timestamps: false }
 );
 
-const Keywords: Model<IKeywords> =
-  (mongoose.models.Keywords as Model<IKeywords>) ||
-  mongoose.model<IKeywords>('Keywords', KeywordsSchema);
+
+// Delete cached model to prevent stale schema on hot reload
+if (mongoose.models.Keywords) delete mongoose.models.Keywords;
+
+const Keywords: Model<IKeywords> = mongoose.model<IKeywords>('Keywords', KeywordsSchema);
 
 export default Keywords;

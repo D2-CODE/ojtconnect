@@ -1,8 +1,9 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { GraduationCap, LayoutDashboard, Search, User, Building2, Users, Mail, FileText, Eye, LogOut, Newspaper } from 'lucide-react';
+import {GraduationCap, LayoutDashboard, Search, User, Building2, Users, Mail, FileText, Eye, LogOut, Newspaper } from 'lucide-react';
 
 type Role = 'student' | 'company' | 'university_admin' | 'super_admin';
 
@@ -49,12 +50,15 @@ export function Sidebar({ role }: SidebarProps) {
   return (
     <aside className={`w-[260px] flex-shrink-0 flex flex-col h-full ${isAdmin ? 'bg-gray-900' : 'bg-white border-r border-gray-200'}`}>
       {/* Logo */}
-      <div className={`px-4 py-6 border-b ${isAdmin ? 'border-gray-700' : 'border-gray-100'}`}>
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#0F6E56] flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-white" />
-          </div>
-          <span className={`font-bold text-sm ${isAdmin ? 'text-white' : 'text-gray-900'}`}>OJT Connect PH</span>
+      <div className={`px-4 py-5 border-b ${isAdmin ? 'border-gray-700' : 'border-gray-100'}`}>
+        <Link href="/">
+          <Image
+            src="/Logo/OJT Connect Ph logo.jpg"
+            alt="OJT Connect PH"
+            width={228}
+            height={80}
+            className="w-full h-auto object-contain rounded-sm"
+          />
         </Link>
       </div>
 

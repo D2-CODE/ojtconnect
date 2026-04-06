@@ -83,8 +83,27 @@ function WallContent() {
   const filterRef = useRef<HTMLDivElement>(null);
   const [posts, setPosts] = useState<unknown[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('wall_page');
+      if (saved) return Number(saved);
+    }
+    return 1;
+  });
   const [loading, setLoading] = useState(true);
+  const pendingScrollRef = useRef<number | null>(null);
+  const isRestoringRef = useRef(false);
+
+  // Read saved scroll on mount, restore after posts load
+  useEffect(() => {
+    const savedScroll = sessionStorage.getItem('wall_scroll');
+    if (savedScroll) {
+      pendingScrollRef.current = Number(savedScroll);
+      isRestoringRef.current = true;
+      sessionStorage.removeItem('wall_scroll');
+      sessionStorage.removeItem('wall_page');
+    }
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -96,6 +115,7 @@ function WallContent() {
   }, []);
 
   useEffect(() => {
+    if (isRestoringRef.current) return;
     const t = searchParams.get('type') ?? 'all';
     setActiveTab(VALID_TYPES.includes(t) ? t : 'all');
     setPage(1);
@@ -115,6 +135,14 @@ function WallContent() {
       if (data.success) { setPosts(data.data); setTotal(data.meta.total); }
     } finally {
       setLoading(false);
+      // Restore scroll position after posts render (back navigation)
+      if (pendingScrollRef.current !== null) {
+        const target = pendingScrollRef.current;
+        pendingScrollRef.current = null;
+        isRestoringRef.current = false;
+        // Double rAF ensures DOM has fully painted before scrolling
+        requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: target })));
+      }
     }
   }, [activeTab, search, hasContact, timePeriod, page]);
 
@@ -241,7 +269,7 @@ function WallContent() {
                 {posts.map((post: any) => <PostCard key={post._id} post={post} />)}
               </div>
               <div className="flex justify-center">
-                <Pagination total={total} page={page} limit={12} onPageChange={setPage} />
+                <Pagination total={total} page={page} limit={12} onPageChange={(p) => { setPage(p); sessionStorage.setItem('wall_page', String(p)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
               </div>
             </>
           )}
@@ -254,6 +282,51 @@ function WallContent() {
             <h3 className="font-semibold text-gray-900 mb-2">Are you a school?</h3>
             <p className="text-sm text-gray-500 mb-4">Register your school to verify your students and boost their credibility.</p>
             <Link href="/register?type=university" className="block border border-[#0F6E56] text-[#0F6E56] text-sm font-semibold text-center py-2.5 rounded-[10px] hover:bg-[#E8F5F1] transition-colors">Register School</Link>
+          </div>
+
+
+          {/* Poster 1 — small */}
+          <div className="relative w-full rounded-2xl overflow-hidden bg-gray-200 border border-gray-200" style={{ aspectRatio: '4/2' }}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-gray-400">
+              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="1.5" /><path d="M3 9l4-4 4 4 4-6 4 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </div>
+              <span className="text-xs font-medium">Ad Poster 1</span>
+              <span className="text-[10px]">256 × 128 px</span>
+            </div>
+          </div>
+
+          {/* Poster 2 — large */}
+          <div className="relative w-full rounded-2xl overflow-hidden bg-gray-200 border border-gray-200" style={{ aspectRatio: '4/6' }}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-gray-400">
+              <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="1.5" /><path d="M3 9l4-4 4 4 4-6 4 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </div>
+              <span className="text-xs font-medium">Ad Poster 2</span>
+              <span className="text-[10px]">256 × 384 px</span>
+            </div>
+          </div>
+
+          {/* Poster 3 — normal */}
+          <div className="relative w-full rounded-2xl overflow-hidden bg-gray-200 border border-gray-200" style={{ aspectRatio: '4/4' }}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-gray-400">
+              <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="1.5" /><path d="M3 9l4-4 4 4 4-6 4 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </div>
+              <span className="text-xs font-medium">Ad Poster 3</span>
+              <span className="text-[10px]">256 × 256 px</span>
+            </div>
+          </div>
+
+          {/* Poster 4 — medium */}
+          <div className="relative w-full rounded-2xl overflow-hidden bg-gray-200 border border-gray-200" style={{ aspectRatio: '4/3' }}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-gray-400">
+              <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="1.5" /><path d="M3 9l4-4 4 4 4-6 4 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </div>
+              <span className="text-xs font-medium">Ad Poster 4</span>
+              <span className="text-[10px]">256 × 192 px</span>
+            </div>
           </div>
         </aside>
       </div>
