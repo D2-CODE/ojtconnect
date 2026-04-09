@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
@@ -124,10 +125,9 @@ export default function RegisterPage() {
       {/* Left panel — fixed, never scrolls */}
       <div className="hidden lg:flex flex-col justify-center px-16 w-1/2 text-white flex-shrink-0" style={{ background: 'linear-gradient(180deg, #0F6E56 0%, #0A5A45 100%)' }}>
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-            <GraduationCap className="w-6 h-6 text-white" />
-          </div>
-          <span className="font-bold text-xl">OJT Connect PH</span>
+          <Image src="/Logo/OJT_Connect_Ph_logo-removebg-preview.png" alt="OJT Connect PH" width={80} height={36} className="h-9 w-auto object-contain" />
+          <div className="w-px h-6 bg-white/30" />
+          <Image src="/Logo/Work24-PH-Logo-Transparent.png" alt="Work24 PH" width={100} height={44} className="h-11 w-auto object-contain brightness-0 invert" />
         </div>
         <h2 className="text-4xl font-bold mb-4">Join the community</h2>
         <p className="text-white/70 text-lg mb-8">Create your free account and start connecting with internship opportunities today.</p>

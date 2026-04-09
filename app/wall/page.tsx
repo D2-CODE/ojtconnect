@@ -11,6 +11,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Search, FileText, SlidersHorizontal, X, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import { AdBanner } from '@/components/ui/AdBanner';
+import type { IAdvertisement } from '@/models/Advertisement';
 
 const TABS = [
   { label: 'All Posts', value: 'all' },
@@ -83,6 +85,7 @@ function WallContent() {
   const filterRef = useRef<HTMLDivElement>(null);
   const [posts, setPosts] = useState<unknown[]>([]);
   const [total, setTotal] = useState(0);
+  const [sidebarAds, setSidebarAds] = useState<IAdvertisement[]>([]);
   const [page, setPage] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = sessionStorage.getItem('wall_page');
@@ -145,6 +148,12 @@ function WallContent() {
       }
     }
   }, [activeTab, search, hasContact, timePeriod, page]);
+
+  useEffect(() => {
+    fetch('/api/advertisements?slot=wall_sidebar')
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setSidebarAds(d.data); });
+  }, []);
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
@@ -285,49 +294,9 @@ function WallContent() {
           </div>
 
 
-          {/* Poster 1 — small */}
-          <div className="relative w-full rounded-2xl overflow-hidden bg-gray-200 border border-gray-200" style={{ aspectRatio: '4/2' }}>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-gray-400">
-              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="1.5" /><path d="M3 9l4-4 4 4 4-6 4 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </div>
-              <span className="text-xs font-medium">Ad Poster 1</span>
-              <span className="text-[10px]">256 × 128 px</span>
-            </div>
-          </div>
-
-          {/* Poster 2 — large */}
-          <div className="relative w-full rounded-2xl overflow-hidden bg-gray-200 border border-gray-200" style={{ aspectRatio: '4/6' }}>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-gray-400">
-              <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="1.5" /><path d="M3 9l4-4 4 4 4-6 4 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </div>
-              <span className="text-xs font-medium">Ad Poster 2</span>
-              <span className="text-[10px]">256 × 384 px</span>
-            </div>
-          </div>
-
-          {/* Poster 3 — normal */}
-          <div className="relative w-full rounded-2xl overflow-hidden bg-gray-200 border border-gray-200" style={{ aspectRatio: '4/4' }}>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-gray-400">
-              <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="1.5" /><path d="M3 9l4-4 4 4 4-6 4 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </div>
-              <span className="text-xs font-medium">Ad Poster 3</span>
-              <span className="text-[10px]">256 × 256 px</span>
-            </div>
-          </div>
-
-          {/* Poster 4 — medium */}
-          <div className="relative w-full rounded-2xl overflow-hidden bg-gray-200 border border-gray-200" style={{ aspectRatio: '4/3' }}>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-gray-400">
-              <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="1.5" /><path d="M3 9l4-4 4 4 4-6 4 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </div>
-              <span className="text-xs font-medium">Ad Poster 4</span>
-              <span className="text-[10px]">256 × 192 px</span>
-            </div>
-          </div>
+          {sidebarAds.length > 0 && sidebarAds.map((ad) => (
+            <AdBanner key={ad._id} ad={ad} sizes="256px" />
+          ))}
         </aside>
       </div>
     </>

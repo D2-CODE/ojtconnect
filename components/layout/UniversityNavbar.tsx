@@ -1,13 +1,18 @@
 'use client';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { LayoutDashboard, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
-export function Navbar() {
+interface UniversityNavbarProps {
+  name: string;
+  logo?: string;
+  slug: string;
+}
+
+export function UniversityNavbar({ name, logo, slug }: UniversityNavbarProps) {
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -22,11 +27,15 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-40 w-full bg-white border-b border-gray-200">
       <div className="max-w-[1440px] mx-auto px-5 lg:px-20 h-16 flex items-center relative">
-        {/* Logos — left */}
-        <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-          <Image src="/Logo/OJT_Connect_Ph_logo-removebg-preview.png" alt="OJT Connect PH" width={85} height={36} className="h-9 w-auto object-contain" />
-          <div className="w-px h-6  mx-1" />
-          <Image src="/Logo/Work24-PH-Logo-Transparent.png" alt="Work24 PH" width={85} height={36} className="h-11 w-auto object-contain" />
+
+        {/* University logo — replaces platform logos */}
+        <Link href={`/university/home/${slug}`} className="flex items-center gap-2 flex-shrink-0">
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logo} alt={name} className="h-10 w-auto max-w-[180px] object-contain" />
+          ) : (
+            <span className="text-lg font-bold text-[#0F6E56] max-w-[200px] truncate">{name}</span>
+          )}
         </Link>
 
         {/* Nav links — absolutely centered */}

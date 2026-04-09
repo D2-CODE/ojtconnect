@@ -34,9 +34,10 @@ interface Props {
   text: string;
   isCompany: boolean;
   isLoggedIn: boolean;
+  isAdmin?: boolean;
 }
 
-export function PostTextWithBlur({ postId, text, isCompany, isLoggedIn }: Props) {
+export function PostTextWithBlur({ postId, text, isCompany, isLoggedIn, isAdmin }: Props) {
   const [unlocked, setUnlocked] = useState(false);
 
   useEffect(() => {
@@ -52,6 +53,13 @@ export function PostTextWithBlur({ postId, text, isCompany, isLoggedIn }: Props)
     window.addEventListener('contact-unlocked', handler);
     return () => window.removeEventListener('contact-unlocked', handler);
   }, [postId, isCompany, text]);
+
+  // Admin sees everything unblurred
+  if (isAdmin) return (
+    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-600">
+      {text}
+    </pre>
+  );
 
   // Non-company logged in users or not logged in — always blur sensitive
   const shouldBlur = !isCompany ? true : !unlocked;

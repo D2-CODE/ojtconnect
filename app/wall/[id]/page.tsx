@@ -14,13 +14,7 @@ import OjtWall from '@/models/OjtWall';
 import Company from '@/models/Company';
 import Student from '@/models/Student';
 import { auth } from '@/lib/auth';
-import mongoose, { Schema, Model } from 'mongoose';
-
-interface IContactUnlock { _id: string; companyProfileId: string; postId: string; }
-const ContactUnlockSchema = new Schema<IContactUnlock>({ _id: { type: String }, companyProfileId: { type: String }, postId: { type: String } }, { _id: false });
-const ContactUnlock: Model<IContactUnlock> =
-  (mongoose.models.ContactUnlock as Model<IContactUnlock>) ||
-  mongoose.model<IContactUnlock>('ContactUnlock', ContactUnlockSchema);
+import ContactUnlock from '@/models/ContactUnlock';
 
 async function getPost(id: string) {
   try {
@@ -46,6 +40,8 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
   const { id } = await params;
   const post = await getPost(id);
   const session = await auth();
+
+  const isAdmin = session?.user?.roleName === 'super_admin';
 
   // Check if current company has unlocked this post's contact
   let isUnlocked = false;
@@ -98,7 +94,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                 <h1 className="text-lg sm:text-2xl font-bold text-gray-900 break-words">
                   {isNativePost
                     ? (post.title || displayName)
-                    : (isUnlocked && (fb?.post_link || fb?.fb_id))
+                    : ((isUnlocked || isAdmin) && (fb?.post_link || fb?.fb_id))
                       ? <a href={fb?.post_link || `https://www.facebook.com/${fb?.fb_id}`} target="_blank" rel="noopener noreferrer" className="hover:text-[#0F6E56] hover:underline">{displayName || 'Anonymous'}</a>
                       : (displayName || 'Anonymous')
                   }
@@ -144,6 +140,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                 text={postText as string || ''}
                 isCompany={session?.user?.roleName === 'company'}
                 isLoggedIn={!!session?.user}
+                isAdmin={isAdmin}
               />
             </div>
           </div>
@@ -161,6 +158,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                 website={isNativePost ? post.contact?.website : undefined}
                 isCompany={session?.user?.roleName === 'company'}
                 isLoggedIn={!!session?.user}
+                isAdmin={isAdmin}
               />
             </div>
 

@@ -25,7 +25,7 @@ function getTransporter(): nodemailer.Transporter {
 // ---------------------------------------------------------------------------
 // Shared layout wrapper — clean, minimal, brand-consistent
 // ---------------------------------------------------------------------------
-function layout(content: string): string {
+export function layout(content: string): string {
   const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'OJT Connect PH';
   const year = new Date().getFullYear();
   return `<!DOCTYPE html>
@@ -63,7 +63,7 @@ function layout(content: string): string {
 </html>`;
 }
 
-function btn(href: string, label: string): string {
+export function btn(href: string, label: string): string {
   return `<table cellpadding="0" cellspacing="0" style="margin:28px 0">
     <tr>
       <td style="background:#0F6E56;border-radius:8px">
@@ -73,15 +73,15 @@ function btn(href: string, label: string): string {
   </table>`;
 }
 
-function h1(text: string): string {
+export function h1(text: string): string {
   return `<h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;line-height:1.3">${text}</h1>`;
 }
 
-function p(text: string, style = ''): string {
+export function p(text: string, style = ''): string {
   return `<p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#374151;${style}">${text}</p>`;
 }
 
-function infoBox(rows: { label: string; value: string }[]): string {
+export function infoBox(rows: { label: string; value: string }[]): string {
   const cells = rows.map(r =>
     `<tr>
       <td style="padding:8px 14px;font-size:13px;color:#6b7280;white-space:nowrap;width:1%">${r.label}</td>
@@ -91,7 +91,7 @@ function infoBox(rows: { label: string; value: string }[]): string {
   return `<table cellpadding="0" cellspacing="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;width:100%;margin:16px 0">${cells}</table>`;
 }
 
-function divider(): string {
+export function divider(): string {
   return `<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">`;
 }
 
