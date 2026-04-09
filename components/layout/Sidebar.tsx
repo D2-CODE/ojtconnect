@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import {GraduationCap, LayoutDashboard, Search, User, Building2, Users, Mail, FileText, Eye, LogOut, Newspaper } from 'lucide-react';
+import {GraduationCap, LayoutDashboard, Search, User, Building2, Users, Mail, FileText, Eye, LogOut, Newspaper, Send, Image as ImageIcon } from 'lucide-react';
 
 type Role = 'student' | 'company' | 'university_admin' | 'super_admin';
 
@@ -36,7 +36,10 @@ const navItems: Record<Role, NavItem[]> = {
     { label: 'Schools', href: '/admin/universities', icon: Building2 },
     { label: 'Users', href: '/admin/users', icon: Users },
     { label: 'Posts', href: '/admin/posts', icon: FileText },
+    { label: 'Keywords', href: '/admin/keywords', icon: Search },
     { label: 'Email Logs', href: '/admin/email-logs', icon: Mail },
+    { label: 'Bulk Email', href: '/admin/bulk-email', icon: Send },
+    { label: 'Advertisements', href: '/admin/advertisements', icon: ImageIcon },
   ],
 };
 

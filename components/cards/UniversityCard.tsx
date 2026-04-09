@@ -24,7 +24,7 @@ export function UniversityCard({ university, showStats = true }: UniversityCardP
   const isVerified = university.verificationStatus === 'verified';
 
   return (
-    <Link href={`/university/${university.slug}`}>
+    <Link href={`/university/home/${university.slug}`}>
       <div className="bg-white rounded-[16px] border border-gray-200 p-5 flex flex-col items-center gap-3 hover:shadow-md transition-shadow cursor-pointer w-full">
         {/* Logo */}
         <div className="w-14 h-14 rounded-[12px] bg-[#E8F5F1] flex items-center justify-center">

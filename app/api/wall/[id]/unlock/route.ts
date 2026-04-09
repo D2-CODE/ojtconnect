@@ -1,56 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import { auth } from '@/lib/auth';
-import mongoose, { Schema, Model } from 'mongoose';
 import { generateId } from '@/lib/utils';
+import ContactUnlock from '@/models/ContactUnlock';
 
-interface IContactUnlock {
-  _id: string;
-  companyProfileId: string;
-  postId: string;
-  unlockedAt: Date;
-}
-
-const ContactUnlockSchema = new Schema<IContactUnlock>(
-  {
-    _id: { type: String, required: true },
-    companyProfileId: { type: String, required: true },
-    postId: { type: String, required: true },
-    unlockedAt: { type: Date, default: Date.now },
-  },
-  { _id: false }
-);
-
-const ContactUnlock: Model<IContactUnlock> =
-  (mongoose.models.ContactUnlock as Model<IContactUnlock>) ||
-  mongoose.model<IContactUnlock>('ContactUnlock', ContactUnlockSchema);
-
+const DAILY_LIMIT = 5;
 const since24h = () => new Date(Date.now() - 24 * 60 * 60 * 1000);
+const withinWindow = (profileId: string) => ({
+  companyProfileId: profileId,
+  $or: [{ unlockedAt: { $gte: since24h() } }, { unlockedAt: { $exists: false } }],
+});
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ unlocked: false, remaining: 3, requiresLogin: true });
+    if (!session?.user) return NextResponse.json({ unlocked: false, remaining: DAILY_LIMIT, requiresLogin: true });
 
     const { id: postId } = await params;
     await connectDB();
 
     const profileId = session.user.profileRef;
-    if (!profileId) return NextResponse.json({ unlocked: false, remaining: 3 });
+    if (!profileId) return NextResponse.json({ unlocked: false, remaining: 0 });
 
-    const since = since24h();
+    const filter = withinWindow(profileId);
     const [alreadyUnlocked, usedToday, oldest] = await Promise.all([
-      ContactUnlock.findOne({ companyProfileId: profileId, postId }).lean(),
-      ContactUnlock.countDocuments({ companyProfileId: profileId, unlockedAt: { $gte: since } }),
-      ContactUnlock.findOne({ companyProfileId: profileId, unlockedAt: { $gte: since } })
-        .sort({ unlockedAt: 1 }).lean<{ unlockedAt: Date }>(),
+      ContactUnlock.findOne({ ...filter, postId }).lean(),
+      ContactUnlock.countDocuments(filter),
+      ContactUnlock.findOne(filter).sort({ unlockedAt: 1 }).lean<{ unlockedAt: Date }>(),
     ]);
 
-    const resetAt = oldest ? new Date(oldest.unlockedAt.getTime() + 24 * 60 * 60 * 1000) : null;
+    const resetAt = oldest?.unlockedAt
+      ? new Date(oldest.unlockedAt.getTime() + 24 * 60 * 60 * 1000)
+      : null;
 
     return NextResponse.json({
       unlocked: !!alreadyUnlocked,
-      remaining: Math.max(0, 3 - usedToday),
+      remaining: Math.max(0, DAILY_LIMIT - usedToday),
       resetAt,
     });
   } catch (error) {
@@ -69,24 +54,28 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const profileId = session.user.profileRef;
     if (!profileId) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 400 });
 
-    const since = since24h();
+    const filter = withinWindow(profileId);
 
     // Already unlocked this post — free re-view
-    const existing = await ContactUnlock.findOne({ companyProfileId: profileId, postId }).lean();
-    if (existing) return NextResponse.json({ success: true, unlocked: true });
+    const existing = await ContactUnlock.findOne({ ...filter, postId }).lean();
+    if (existing) {
+      const usedToday = await ContactUnlock.countDocuments(filter);
+      return NextResponse.json({ success: true, unlocked: true, remaining: Math.max(0, DAILY_LIMIT - usedToday) });
+    }
 
     // Check daily limit
-    const usedToday = await ContactUnlock.countDocuments({ companyProfileId: profileId, unlockedAt: { $gte: since } });
-    if (usedToday >= 3) {
-      const oldest = await ContactUnlock.findOne({ companyProfileId: profileId, unlockedAt: { $gte: since } })
-        .sort({ unlockedAt: 1 }).lean<{ unlockedAt: Date }>();
-      const resetAt = oldest ? new Date(oldest.unlockedAt.getTime() + 24 * 60 * 60 * 1000) : null;
-      return NextResponse.json({ success: false, error: 'Daily limit reached', resetAt }, { status: 429 });
+    const usedToday = await ContactUnlock.countDocuments(filter);
+    if (usedToday >= DAILY_LIMIT) {
+      const oldest = await ContactUnlock.findOne(filter).sort({ unlockedAt: 1 }).lean<{ unlockedAt: Date }>();
+      const resetAt = oldest?.unlockedAt
+        ? new Date(oldest.unlockedAt.getTime() + 24 * 60 * 60 * 1000)
+        : null;
+      return NextResponse.json({ success: false, error: 'Daily limit reached', remaining: 0, resetAt }, { status: 429 });
     }
 
     await ContactUnlock.create({ _id: generateId(), companyProfileId: profileId, postId, unlockedAt: new Date() });
 
-    return NextResponse.json({ success: true, unlocked: true });
+    return NextResponse.json({ success: true, unlocked: true, remaining: Math.max(0, DAILY_LIMIT - (usedToday + 1)) });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }

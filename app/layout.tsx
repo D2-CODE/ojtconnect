@@ -9,6 +9,11 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 export const metadata: Metadata = {
   title: "OJT Connect PH — Free Internship Portal for the Philippines",
   description: "Connect Filipino students with internship opportunities. Find OJT positions, verify students, and manage connections — all for free.",
+   icons: {
+    icon: '/Logo/favicon.png',
+    shortcut: '/Logo/favicon.png',
+    apple: '/Logo/favicon.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
