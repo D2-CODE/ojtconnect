@@ -36,8 +36,10 @@ async function getPost(id: string) {
   } catch { return null; }
 }
 
-export default async function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function PostDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  // Extract ID from end of slug: "internship-by-work24-philippines-1775740205939880" → "1775740205939880"
+  const id = slug.split('-').pop() ?? slug;
   const post = await getPost(id);
   const session = await auth();
 
@@ -139,6 +141,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                 postId={id}
                 text={postText as string || ''}
                 isCompany={session?.user?.roleName === 'company'}
+                isStudent={session?.user?.roleName === 'student'}
                 isLoggedIn={!!session?.user}
                 isAdmin={isAdmin}
               />
@@ -157,6 +160,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                 phone={isNativePost ? post.contact?.phone : (post.SectionData?.fbleads as {phones?: string})?.phones}
                 website={isNativePost ? post.contact?.website : undefined}
                 isCompany={session?.user?.roleName === 'company'}
+                isStudent={session?.user?.roleName === 'student'}
                 isLoggedIn={!!session?.user}
                 isAdmin={isAdmin}
               />

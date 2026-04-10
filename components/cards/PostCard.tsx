@@ -53,6 +53,16 @@ function truncate(text: string, max = 180): string {
   return text.length > max ? text.slice(0, max) + '...' : text;
 }
 
+function toSlug(name: string | undefined, id: string): string {
+  const namePart = (name || 'post')
+    .toLowerCase().trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `internship-by-${namePart}-${id}`;
+}
+
 export function PostCard({ post }: PostCardProps) {
   const fb = post.SectionData?.fbleads;
   // Native = posted directly from dashboard (source is company/student with no scraped fb_id)
@@ -61,6 +71,7 @@ export function PostCard({ post }: PostCardProps) {
   if (isNativePost) {
     const skills = post.skills || [];
     const isIntern = post.source === 'student';
+    const slug = toSlug(post.postedByName, post._id);
     return (
       <div className="bg-white rounded-2xl border border-gray-200 p-5 flex flex-col gap-3 hover:shadow-md hover:border-gray-300 transition-all w-full">
         <div className="flex items-start gap-3">
@@ -104,7 +115,7 @@ export function PostCard({ post }: PostCardProps) {
                 <CheckCircle2 className="w-3.5 h-3.5" /> Claimed
               </span>
             )}
-            <Link href={`/wall/${post._id}`} onClick={() => { sessionStorage.setItem('wall_scroll', String(window.scrollY)); }}><Button variant="outline" size="sm">View Post</Button></Link>
+            <Link href={`/wall/${slug}`} onClick={() => { sessionStorage.setItem('wall_scroll', String(window.scrollY)); }}><Button variant="outline" size="sm">View Post</Button></Link>
           </div>
         </div>
       </div>
@@ -114,6 +125,7 @@ export function PostCard({ post }: PostCardProps) {
   if (!fb) return null;
   const skills = fb.skills ? fb.skills.split(',').map(s => s.trim()).filter(Boolean).slice(0, 4) : [];
   const isIntern = fb.lead_type === 'intern';
+  const slug = toSlug(fb.name, post._id);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-5 flex flex-col gap-3 hover:shadow-md hover:border-gray-300 transition-all w-full">
@@ -145,7 +157,7 @@ export function PostCard({ post }: PostCardProps) {
             ? <><CheckCircle2 className="w-3.5 h-3.5" /> Claimed</>
             : <><Clock className="w-3.5 h-3.5" /> Unclaimed</>}
         </span>
-        <Link href={`/wall/${post._id}`} onClick={() => sessionStorage.setItem('wall_scroll', String(window.scrollY))}><Button variant="outline" size="sm">View Post</Button></Link>
+        <Link href={`/wall/${slug}`} onClick={() => sessionStorage.setItem('wall_scroll', String(window.scrollY))}><Button variant="outline" size="sm">View Post</Button></Link>
       </div>
     </div>
   );

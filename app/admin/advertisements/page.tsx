@@ -16,7 +16,7 @@ interface Ad {
 }
 
 const SLOTS: { key: AdSlot; label: string; desc: string; max: number }[] = [
-  { key: 'home_small',   label: 'Home · Small Banners',  desc: 'Below hero section',         max: 3 },
+  { key: 'home_small',   label: 'Home · Small Banners',  desc: 'Below hero section',         max: 4 },
   { key: 'home_medium',  label: 'Home · Medium Banners', desc: 'After "How it works"',        max: 2 },
   { key: 'home_large',   label: 'Home · Large Banner',   desc: 'After "Who it\'s for"',       max: 1 },
   { key: 'wall_sidebar', label: 'Wall · Sidebar Ads',    desc: 'Right sidebar on wall page',  max: 5 },
