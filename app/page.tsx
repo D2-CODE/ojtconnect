@@ -6,8 +6,23 @@ import { AdBanner } from '@/components/ui/AdBanner';
 import { GraduationCap, Building2, University, ArrowRight, Search, CheckCircle, Users, Briefcase } from 'lucide-react';
 import connectDB from '@/lib/mongodb';
 import UniversityModel from '@/models/University';
+import OjtWall from '@/models/OjtWall';
+import Company from '@/models/Company';
 import Advertisement from '@/models/Advertisement';
 import type { IAdvertisement } from '@/models/Advertisement';
+
+async function getStats() {
+  try {
+    await connectDB();
+    const [wallPosts, companies] = await Promise.all([
+      OjtWall.countDocuments({ isActive: true }),
+      Company.countDocuments({ isVisible: true, userId: { $exists: true, $ne: '' } }),
+    ]);
+    return { wallPosts, companies };
+  } catch {
+    return { wallPosts: 0, companies: 0 };
+  }
+}
 
 async function getFeaturedUniversities() {
   try {
@@ -32,26 +47,27 @@ async function getAds(slot: string): Promise<IAdvertisement[]> {
 }
 
 const STEPS = [
-  { icon: GraduationCap, title: 'Create your account', desc: 'Sign up as a student, company, or school admin for free.' },
-  { icon: Search, title: 'Browse opportunities', desc: 'Explore real internship leads scraped from Facebook groups.' },
-  { icon: CheckCircle, title: 'Verify your profile', desc: 'Get verified through your School for trusted connections.' },
-  { icon: Briefcase, title: 'Connect & apply', desc: 'Reach out directly to companies and land your OJT.' },
-];
-
-const STATS = [
-  { value: '2,500+', label: 'Active Interns' },
-  { value: '850+', label: 'Companies' },
-  { value: '120+', label: 'Schools' },
-  { value: '100%', label: 'Free' },
+  { icon: GraduationCap, title: 'Create your profile', desc: 'Sign up and verify your school identity.' },
+  { icon: Search, title: 'Browse opportunities', desc: 'Explore internships posted by verified companies.' },
+  { icon: CheckCircle, title: 'Apply and connect', desc: 'Apply directly or reach out to companies.' },
+  { icon: Briefcase, title: 'Start your OJT', desc: 'Get hired and begin your internship journey.' },
 ];
 
 export default async function HomePage() {
-  const [featuredUniversities, smallAds, mediumAds, largeAds] = await Promise.all([
+  const [featuredUniversities, stats, smallAds, mediumAds, largeAds] = await Promise.all([
     getFeaturedUniversities(),
+    getStats(),
     getAds('home_small'),
     getAds('home_medium'),
     getAds('home_large'),
   ]);
+
+  const STATS = [
+    { value: `${stats.wallPosts.toLocaleString()}+`, label: 'Active Interns' },
+    { value: `${stats.companies.toLocaleString()}+`, label: 'Companies' },
+    { value: '120+', label: 'Schools' },
+    { value: '100%', label: 'Free' },
+  ];
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -85,7 +101,7 @@ export default async function HomePage() {
 {smallAds.length > 0 && (
   <section className="py-4 px-5">
     <div className="max-w-[1440px] mx-auto">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {smallAds.map((ad) => (
           <AdBanner key={ad._id} ad={ad} sizes="(max-width: 640px) 100vw, 33vw" />
         ))}
@@ -141,7 +157,7 @@ export default async function HomePage() {
 )}
 
       {/* Who it's for */}
-      <section className="py-20 px-5 bg-gray-50">
+      <section className="py-10 px-5 bg-gray-50">
         <div className="max-w-[1440px] mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-bold text-gray-900 mb-3">Built for everyone in the OJT ecosystem</h2>
@@ -177,7 +193,7 @@ export default async function HomePage() {
 )}
 
       {/* Featured Universities */}
-      <section className="py-20 px-5 bg-white">
+      <section className="py-12 px-5 bg-white">
         <div className="max-w-[1440px] mx-auto">
           <div className="flex items-end justify-between mb-10">
             <div>

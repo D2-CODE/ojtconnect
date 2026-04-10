@@ -19,8 +19,13 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search');
     if (search) query['$or'] = [{ to: { $regex: search, $options: 'i' } }, { subject: { $regex: search, $options: 'i' } }];
     const skip = (page - 1) * limit;
+    const sortBy  = searchParams.get('sortBy')  || 'createdAt';
+    const sortDir = searchParams.get('sortDir') || 'desc';
+    const allowedSort = ['to', 'subject', 'template', 'status', 'createdAt'];
+    const sortField = allowedSort.includes(sortBy) ? sortBy : 'createdAt';
+    const sortOrder = sortDir === 'asc' ? 1 : -1;
     const [logs, total] = await Promise.all([
-      EmailLog.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      EmailLog.find(query).sort({ [sortField]: sortOrder }).skip(skip).limit(limit).lean(),
       EmailLog.countDocuments(query),
     ]);
     return NextResponse.json({ success: true, data: logs, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } });

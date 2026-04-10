@@ -4,6 +4,7 @@ import Student from '@/models/Student';
 import Company from '@/models/Company';
 import University from '@/models/University';
 import { auth } from '@/lib/auth';
+import { slugify } from '@/lib/utils';
 
 export async function GET() {
   try {
@@ -40,7 +41,16 @@ export async function PATCH(req: NextRequest) {
     let profile = null;
     if (profileType === 'student') profile = await Student.findByIdAndUpdate(profileRef, body, { new: true }).lean();
     else if (profileType === 'company') profile = await Company.findByIdAndUpdate(profileRef, body, { new: true }).lean();
-    else if (profileType === 'university_admin') profile = await University.findByIdAndUpdate(profileRef, body, { new: true }).lean();
+    else if (profileType === 'university_admin') {
+      // Regenerate slug from full name whenever name changes
+      if (body.name && typeof body.name === 'string') {
+        const newSlug = slugify(body.name);
+        // Ensure slug is unique (append id suffix if taken by another university)
+        const existing = await University.findOne({ slug: newSlug, _id: { $ne: profileRef } }).lean();
+        body.slug = existing ? `${newSlug}-${profileRef.slice(-4)}` : newSlug;
+      }
+      profile = await University.findByIdAndUpdate(profileRef, body, { new: true }).lean();
+    }
     return NextResponse.json({ success: true, data: profile });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
