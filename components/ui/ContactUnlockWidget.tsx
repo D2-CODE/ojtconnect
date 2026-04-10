@@ -12,11 +12,12 @@ interface Props {
   phone?: string;
   website?: string;
   isCompany: boolean;
+  isStudent: boolean;
   isLoggedIn: boolean;
   isAdmin?: boolean;
 }
 
-export function ContactUnlockWidget({ postId, email, phone, website, isCompany, isLoggedIn, isAdmin }: Props) {
+export function ContactUnlockWidget({ postId, email, phone, website, isCompany, isStudent, isLoggedIn, isAdmin }: Props) {
   const [unlocked, setUnlocked] = useState(false);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [resetAt, setResetAt] = useState<string | null>(null);
@@ -88,6 +89,30 @@ export function ContactUnlockWidget({ postId, email, phone, website, isCompany, 
       <Lock className="w-8 h-8 text-gray-300 mx-auto mb-2" />
       <p className="text-sm text-gray-500 mb-3">Sign in to view contact details.</p>
       <Link href="/login"><Button variant="primary" className="w-full">Sign In</Button></Link>
+    </div>
+  );
+
+  // Student — show contact freely (no unlock needed)
+  if (isStudent) return (
+    <div className="flex flex-col gap-2">
+      {email && (
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Mail className="w-4 h-4 text-[#0F6E56]" />
+          <a href={`mailto:${email}`} className="hover:text-[#0F6E56] break-all">{email}</a>
+        </div>
+      )}
+      {phone && (
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Phone className="w-4 h-4 text-[#0F6E56]" />
+          <span>{phone}</span>
+        </div>
+      )}
+      {website && (
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Globe className="w-4 h-4 text-[#0F6E56]" />
+          <a href={website} target="_blank" rel="noopener noreferrer" className="hover:text-[#0F6E56] break-all">{website}</a>
+        </div>
+      )}
     </div>
   );
 
