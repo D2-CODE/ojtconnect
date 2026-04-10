@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { SkillTag } from '@/components/ui/SkillTag';
 import { useToast } from '@/components/ui/Toast';
-import { FileText, Search, Eye, Pencil, Trash2, Lock, LockOpen, Plus, X, ArrowUpDown, ArrowUp, ArrowDown, Building2, GraduationCap, EyeOff, RefreshCw, Tag } from 'lucide-react';
+import { FileText, Search, Eye, Pencil, Trash2, Lock, LockOpen, Plus, X, Building2, GraduationCap, EyeOff, RefreshCw, Tag, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -329,8 +329,8 @@ export default function AdminPostsPage() {
   });
 
   const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 ml-1 text-gray-300" />;
-    return sortDir === 'asc' ? <ArrowUp className="w-3 h-3 ml-1 text-[#0F6E56]" /> : <ArrowDown className="w-3 h-3 ml-1 text-[#0F6E56]" />;
+    if (sortField !== field) return <ChevronsUpDown className="w-3 h-3 ml-1 text-gray-300" />;
+    return sortDir === 'asc' ? <ChevronUp className="w-3 h-3 ml-1 text-[#0F6E56]" /> : <ChevronDown className="w-3 h-3 ml-1 text-[#0F6E56]" />;
   };
 
   const [applying, setApplying] = useState(false);
