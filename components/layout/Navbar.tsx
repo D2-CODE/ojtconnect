@@ -34,6 +34,7 @@ export function Navbar() {
           <Link href="/wall" className="text-sm text-gray-600 hover:text-[#0F6E56] font-medium transition-colors">Wall</Link>
           <Link href="/wall?type=internship" className="text-sm text-gray-600 hover:text-[#0F6E56] font-medium transition-colors">Internships</Link>
           <Link href="/wall?type=intern" className="text-sm text-gray-600 hover:text-[#0F6E56] font-medium transition-colors">Find Interns</Link>
+          <Link href="/companies" className="text-sm text-gray-600 hover:text-[#0F6E56] font-medium transition-colors">Company</Link>
         </div>
 
         {/* Auth — right */}
@@ -64,6 +65,7 @@ export function Navbar() {
           <Link href="/wall" className="text-sm text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>Wall</Link>
           <Link href="/wall?type=internship" className="text-sm text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>Internships</Link>
           <Link href="/wall?type=intern" className="text-sm text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>Find Interns</Link>
+          <Link href="/companies" className="text-sm text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>Companies</Link>
           <div className="flex flex-col gap-2 pt-2 border-t border-gray-100">
             {session?.user ? (
               <Link href={getDashboardUrl(session.user.roleName)} onClick={() => setMenuOpen(false)}>

@@ -48,15 +48,14 @@ interface SidebarProps { role: Role; }
 export function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const items = navItems[role];
-  const isAdmin = role === 'super_admin';
 
   return (
-    <aside className={`w-[260px] flex-shrink-0 flex flex-col h-full ${isAdmin ? 'bg-gray-900' : 'bg-white border-r border-gray-200'}`}>
+    <aside className="w-[260px] flex-shrink-0 flex flex-col h-full bg-gray-900">
       {/* Logo */}
-      <div className={`px-4 py-5 border-b ${isAdmin ? 'border-gray-700' : 'border-gray-100'}`}>
+      <div className="px-4 py-5 border-b border-gray-700">
         <Link href="/">
           <Image
-            src="/Logo/OJT Connect Ph logo.jpg"
+            src="/Logo/logo with white text.png"
             alt="OJT Connect PH"
             width={228}
             height={80}
@@ -76,12 +75,8 @@ export function Sidebar({ role }: SidebarProps) {
               href={item.href}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-[8px] text-sm font-medium transition-all
                 ${isActive
-                  ? isAdmin
-                    ? 'bg-[#0F6E56] text-white'
-                    : 'bg-[#E8F5F1] text-[#0F6E56]'
-                  : isAdmin
-                    ? 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-[#0F6E56] text-white'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                 }`}
             >
               <Icon className="w-[18px] h-[18px] flex-shrink-0" />
@@ -92,11 +87,10 @@ export function Sidebar({ role }: SidebarProps) {
       </nav>
 
       {/* Logout */}
-      <div className={`px-2 pb-4 border-t ${isAdmin ? 'border-gray-700 pt-4' : 'border-gray-100 pt-4'}`}>
+      <div className="px-2 pb-4 border-t border-gray-700 pt-4">
         <button
           onClick={() => signOut({ callbackUrl: '/login' })}
-          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-[8px] text-sm font-medium transition-all
-            ${isAdmin ? 'text-gray-300 hover:bg-gray-800 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-[8px] text-sm font-medium transition-all text-gray-300 hover:bg-gray-800 hover:text-white"
         >
           <LogOut className="w-[18px] h-[18px]" />
           Log Out
