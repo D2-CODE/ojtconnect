@@ -31,6 +31,8 @@ export async function GET(req: NextRequest) {
 
     const seen = new Set<string>();
     const unclaimedContacts: { postId: string; name: string; email: string; phone: string; leadType: string }[] = [];
+    const claimedContacts: { postId: string; name: string; email: string; phone: string; leadType: string }[] = [];
+    const seenClaimed = new Set<string>();
 
     for (const post of unclaimedPosts) {
       const fb = post.SectionData?.fbleads;
@@ -39,19 +41,25 @@ export async function GET(req: NextRequest) {
       for (const email of emails) {
         if (seen.has(email)) continue;
         seen.add(email);
-        unclaimedContacts.push({
-          postId: post._id,
-          name: fb?.name ?? '',
-          email,
-          phone: fb?.phones ?? '',
-          leadType: fb?.lead_type ?? '',
-        });
+        unclaimedContacts.push({ postId: post._id, name: fb?.name ?? '', email, phone: fb?.phones ?? '', leadType: fb?.lead_type ?? '' });
+      }
+    }
+
+    for (const post of claimedPosts) {
+      const fb = post.SectionData?.fbleads;
+      const rawEmails = fb?.emails ?? '';
+      const emails = rawEmails.split(/[,;\s]+/).map((e) => e.trim().toLowerCase()).filter(Boolean);
+      for (const email of emails) {
+        if (seenClaimed.has(email)) continue;
+        seenClaimed.add(email);
+        claimedContacts.push({ postId: post._id, name: fb?.name ?? '', email, phone: fb?.phones ?? '', leadType: fb?.lead_type ?? '' });
       }
     }
 
     return NextResponse.json({
       success: true,
       data: unclaimedContacts,
+      claimedData: claimedContacts,
       meta: {
         totalPostsWithContact,
         totalClaimed: claimedPosts.length,
@@ -109,8 +117,9 @@ export async function POST(req: NextRequest) {
         }
 
         // Custom template — use sendEmail directly with lib/email layout helpers
-        const subject = customSubject || `A message from ${appName}`;
+        const subject = (customSubject || `A message from ${appName}`).replace(/\{name\}/gi, firstName);
         const bodyHtml = (customBody || '')
+          .replace(/\{name\}/gi, firstName)
           .split('\n')
           .map((line) => p(line || '&nbsp;'))
           .join('');
